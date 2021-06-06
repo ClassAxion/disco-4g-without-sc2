@@ -1,6 +1,6 @@
 # Parrot Disco without SC2 only on LTE
 
-I just want to have fun with Parrot Disco and I need something new :)
+I just want to have fun with Parrot Disco and I need something new :) This project is open source.
 
 # Parrot Hardware & Software details
 
