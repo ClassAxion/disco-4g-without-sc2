@@ -9,14 +9,15 @@ I just want to have fun with Parrot Disco and I need something new :) This proje
 -   Connecting to ZeroTier network on startup
 -   Don't need to initialize WiFi to 4G reconnect, it's ready out of the box
 -   Don't need to modify software (but we will probably need to do this if we want to start flight plan instead of auto landing on connection lost - we want to land precisely using flight plan with linear landing, I don't know if it possible)
--   `ARStream2` available at port `55004`, video control? port `55005`
+-   `ARStream2` available at RTP port `55004` or `5004`?, video RTCP port `55005` or `5005`?
 -   We don't know how to trigger the stream without calling SC2
--   Control port UDP? `54321`
+-   Control port UDP? `54321` or `44444`?
 
 ## SkyController 2
 
 -   Control? port `43210`
 -   Triggering video stream on `:7711/video`. We Need to check what's happening on this endpoint.
+-   ADB available on port `9050`
 
 ## FreeFlight Pro Android App
 
@@ -29,9 +30,10 @@ I just want to have fun with Parrot Disco and I need something new :) This proje
 # WWW as SC2 details
 
 -   Client must be in ZeroZier network
--   Video feed directly from Disco, without proxy server
+-   Video feed directly from Disco (if is will be possible), without proxy server
 -   Control without proxy server (if is will be possible) directly to Disco using `TCP/UDP` raw sockets in JavaScript API
 -   Live map with Disco and all flight parameters
+-   If directly connections won't be possible, then use webrtc `P2P` connection for control and video
 
 # Roadmap
 
