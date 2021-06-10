@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title></title>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
+            integrity="undefined"
+            crossorigin="anonymous"
+        />
+        <style>
+            body {
+                padding: 15px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="row">
+            <div class="col-8">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="card-title text-center">Video feed</div>
+                        <video
+                            style="width: 100%; height: 720px"
+                            controls="false"
+                            autoplay="true"
+                        ></video>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="card-title text-center">Live map</div>
+                        <div style="height: 380px"></div>
+                    </div>
+                </div>
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                Distance flown: <strong>N/a</strong> Meters
+                            </li>
+                            <li class="list-group-item">
+                                Remaining battery: <strong>N/a</strong> minutes
+                            </li>
+                            <li class="list-group-item">
+                                Battery voltage: <strong>N/a</strong>V
+                            </li>
+                            <li class="list-group-item">
+                                LTE signal: <strong>N/a</strong>
+                                <strong>N/a</strong>%
+                            </li>
+                            <li class="list-group-item">
+                                <label for="cameraX" class="form-label"
+                                    >Camera Up/Down</label
+                                >
+                                <input
+                                    type="range"
+                                    value="0"
+                                    min="-127"
+                                    max="127"
+                                    class="form-range"
+                                    id="cameraX"
+                                />
+                            </li>
+                            <li class="list-group-item">
+                                <label for="cameraY" class="form-label"
+                                    >Camera Left/Right</label
+                                >
+                                <input
+                                    type="range"
+                                    value="0"
+                                    min="-127"
+                                    max="127"
+                                    class="form-range"
+                                    id="cameraY"
+                                />
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col text-center">
+                <div class="card">
+                    <div class="card-body">
+                        <ul
+                            class="
+                                list-group list-group-horizontal
+                                justify-content-center
+                            "
+                        >
+                            <li class="list-group-item">
+                                <strong>N/a</strong> km/h
+                            </li>
+                            <li class="list-group-item">
+                                <strong>N/a</strong> M
+                            </li>
+                            <li class="list-group-item">
+                                <strong>N/a</strong> M
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col text-center">
+                <div class="card">
+                    <div class="card-body">
+                        <button class="btn btn-lg btn-secondary">
+                            Connect
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col text-center">
+                <div class="card">
+                    <div class="card-body">
+                        <ul
+                            class="
+                                list-group list-group-horizontal
+                                justify-content-center
+                            "
+                        >
+                            <li class="list-group-item">
+                                <strong>N/a</strong>%
+                            </li>
+                            <li class="list-group-item">
+                                <strong>N/a</strong>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>N/a</strong> ms
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.11.0/simplepeer.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+        <script src="/script.js"></script>
+    </body>
+</html>
