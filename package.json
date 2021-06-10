@@ -1,0 +1,30 @@
+{
+  "name": "disco-4g-without-sc2",
+  "version": "1.0.0",
+  "description": "I just want to have fun with Parrot Disco and I need something new :) This project is open source.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ClassAxion/disco-4g-without-sc2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ClassAxion/disco-4g-without-sc2/issues"
+  },
+  "homepage": "https://github.com/ClassAxion/disco-4g-without-sc2#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "fluent-ffmpeg": "^2.1.2",
+    "node-bebop": "^0.6.0",
+    "parrot-disco-api": "git+https://github.com/ClassAxion/parrot-disco-api.git",
+    "simple-peer": "^9.11.0",
+    "socket.io": "^4.1.2",
+    "wrtc": "^0.4.7",
+    "wrtc-to-ffmpeg": "0.0.0"
+  }
+}
