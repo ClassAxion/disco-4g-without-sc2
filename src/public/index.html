@@ -11,6 +11,13 @@
             integrity="undefined"
             crossorigin="anonymous"
         />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+            integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
         <style>
             body {
                 padding: 15px;
@@ -23,11 +30,7 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="card-title text-center">Video feed</div>
-                        <video
-                            style="width: 100%; height: 720px"
-                            controls="false"
-                            autoplay="true"
-                        ></video>
+                        <video style="width: 100%; height: 720px" controls="false" autoplay="true"></video>
                     </div>
                 </div>
             </div>
@@ -41,44 +44,19 @@
                 <div class="card mt-4">
                     <div class="card-body">
                         <ul class="list-group">
+                            <li class="list-group-item">Distance flown: <strong>N/a</strong> Meters</li>
+                            <li class="list-group-item">Remaining battery: <strong>N/a</strong> minutes</li>
                             <li class="list-group-item">
-                                Distance flown: <strong>N/a</strong> Meters
+                                Battery voltage: <strong data-action="battery" data-property="voltage">N/a</strong>V
+                            </li>
+                            <li class="list-group-item">LTE signal: <strong>N/a</strong> <strong>N/a</strong>%</li>
+                            <li class="list-group-item">
+                                <label for="cameraX" class="form-label">Camera Up/Down</label>
+                                <input type="range" value="0" min="-127" max="127" class="form-range" id="cameraX" />
                             </li>
                             <li class="list-group-item">
-                                Remaining battery: <strong>N/a</strong> minutes
-                            </li>
-                            <li class="list-group-item">
-                                Battery voltage: <strong>N/a</strong>V
-                            </li>
-                            <li class="list-group-item">
-                                LTE signal: <strong>N/a</strong>
-                                <strong>N/a</strong>%
-                            </li>
-                            <li class="list-group-item">
-                                <label for="cameraX" class="form-label"
-                                    >Camera Up/Down</label
-                                >
-                                <input
-                                    type="range"
-                                    value="0"
-                                    min="-127"
-                                    max="127"
-                                    class="form-range"
-                                    id="cameraX"
-                                />
-                            </li>
-                            <li class="list-group-item">
-                                <label for="cameraY" class="form-label"
-                                    >Camera Left/Right</label
-                                >
-                                <input
-                                    type="range"
-                                    value="0"
-                                    min="-127"
-                                    max="127"
-                                    class="form-range"
-                                    id="cameraY"
-                                />
+                                <label for="cameraY" class="form-label">Camera Left/Right</label>
+                                <input type="range" value="0" min="-127" max="127" class="form-range" id="cameraY" />
                             </li>
                         </ul>
                     </div>
@@ -89,21 +67,13 @@
             <div class="col text-center">
                 <div class="card">
                     <div class="card-body">
-                        <ul
-                            class="
-                                list-group list-group-horizontal
-                                justify-content-center
-                            "
-                        >
+                        <ul class="list-group list-group-horizontal justify-content-center">
+                            <li class="list-group-item"><strong>N/a</strong> km/h</li>
                             <li class="list-group-item">
-                                <strong>N/a</strong> km/h
+                                <i class="fas fa-level-up-alt"></i>
+                                <strong data-action="altitude" data-property="meters">N/a</strong> M
                             </li>
-                            <li class="list-group-item">
-                                <strong>N/a</strong> M
-                            </li>
-                            <li class="list-group-item">
-                                <strong>N/a</strong> M
-                            </li>
+                            <li class="list-group-item"><strong>N/a</strong> M</li>
                         </ul>
                     </div>
                 </div>
@@ -111,29 +81,31 @@
             <div class="col text-center">
                 <div class="card">
                     <div class="card-body">
-                        <button class="btn btn-lg btn-secondary">
-                            Connect
-                        </button>
+                        <button class="btn btn-lg btn-secondary">Connect</button>
                     </div>
                 </div>
             </div>
             <div class="col text-center">
                 <div class="card">
                     <div class="card-body">
-                        <ul
-                            class="
-                                list-group list-group-horizontal
-                                justify-content-center
-                            "
-                        >
+                        <ul class="list-group list-group-horizontal justify-content-center">
                             <li class="list-group-item">
-                                <strong>N/a</strong>%
+                                <i class="fas fa-globe" data-action="gps" data-property="isFixed"></i>
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-battery-full"></i>
+                                <strong data-action="battery" data-property="percent"
+                                    ><i class="fas fa-sync"></i></strong
+                                >%
                             </li>
                             <li class="list-group-item">
                                 <strong>N/a</strong>
                             </li>
                             <li class="list-group-item">
-                                <strong>N/a</strong> ms
+                                <strong data-action="connection" data-property="latency"
+                                    ><i class="fas fa-sync"></i
+                                ></strong>
+                                ms
                             </li>
                         </ul>
                     </div>
