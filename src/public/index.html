@@ -52,11 +52,27 @@
                             <li class="list-group-item">LTE signal: <strong>N/a</strong> <strong>N/a</strong>%</li>
                             <li class="list-group-item">
                                 <label for="cameraX" class="form-label">Camera Up/Down</label>
-                                <input type="range" value="0" min="-127" max="127" class="form-range" id="cameraX" />
+                                <input
+                                    type="range"
+                                    value="0"
+                                    min="-127"
+                                    max="127"
+                                    class="form-range"
+                                    id="cameraX"
+                                    disabled="true"
+                                />
                             </li>
                             <li class="list-group-item">
                                 <label for="cameraY" class="form-label">Camera Left/Right</label>
-                                <input type="range" value="0" min="-127" max="127" class="form-range" id="cameraY" />
+                                <input
+                                    type="range"
+                                    value="0"
+                                    min="-127"
+                                    max="127"
+                                    class="form-range"
+                                    id="cameraY"
+                                    disabled="true"
+                                />
                             </li>
                         </ul>
                     </div>
@@ -81,7 +97,10 @@
             <div class="col text-center">
                 <div class="card">
                     <div class="card-body">
-                        <button class="btn btn-lg btn-secondary">Connect</button>
+                        <button class="btn btn-lg btn-secondary" data-action="button" data-property="main">
+                            Connect</button
+                        ><br />
+                        <small data-action="flyingState" data-property="info">N/a</small>
                     </div>
                 </div>
             </div>

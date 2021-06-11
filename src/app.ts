@@ -7,11 +7,23 @@ import Peer from 'simple-peer';
 import ParrotDisco from 'parrot-disco-api';
 import { Server } from 'http';
 
+import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDiscoFlyingState.enum';
+
 let disco: ParrotDisco = new ParrotDisco({
     debug: !!process.env.DEBUG,
 });
 
-const localCache: { gpsFixed?: boolean; altitude?: number } = { gpsFixed: false, altitude: 0 };
+const localCache: {
+    gpsFixed?: boolean;
+    altitude?: number;
+    flyingState?: ParrotDiscoFlyingState;
+    canTakeOff?: boolean;
+} = {
+    gpsFixed: false,
+    altitude: 0,
+    flyingState: ParrotDiscoFlyingState.LANDED,
+    canTakeOff: false,
+};
 
 let videoOutput;
 
@@ -92,12 +104,38 @@ disco.on('GPSFixStateChanged', ({ fixed }) => {
     });
 });
 
+let lastAltitudePacket = 0;
+
 disco.on('AltitudeChanged', ({ altitude }) => {
     localCache.altitude = altitude;
 
+    if (!lastAltitudePacket || Date.now() - lastAltitudePacket > 250) {
+        sendPacketToEveryone({
+            action: 'altitude',
+            data: altitude,
+        });
+
+        lastAltitudePacket = Date.now();
+    }
+});
+
+disco.on('flyingState', ({ flyingState }) => {
+    localCache.flyingState = flyingState;
+
     sendPacketToEveryone({
-        action: 'altitude',
-        data: altitude,
+        action: 'flyingState',
+        data: flyingState,
+    });
+});
+
+disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
+    const canTakeOff = AvailabilityState === 1;
+
+    localCache.canTakeOff = canTakeOff;
+
+    sendPacketToEveryone({
+        action: 'canTakeOff',
+        data: canTakeOff,
     });
 });
 
@@ -105,6 +143,8 @@ io.on('connection', async (socket) => {
     console.log(`Connection ${socket.id} made, creating peer..`);
 
     const stream = new wrtc.MediaStream();
+
+    socket.authorized = true;
 
     stream.addTrack(videoOutput.track);
 
@@ -123,9 +163,15 @@ io.on('connection', async (socket) => {
     peer.on('data', (data) => {
         const packet = JSON.parse(data.toString());
 
-        if (packet.action && packet.action === 'camera') {
-            disco.Camera.move(packet.data.x, packet.data.y);
-        } else if (packet.action === 'pong') {
+        if (socket.authorized) {
+            if (packet.action && packet.action === 'camera') {
+                disco.Camera.move(packet.data.x, packet.data.y);
+            } else if (packet.action && packet.action === 'takeOff') {
+                disco.Piloting.takeOff();
+            }
+        }
+
+        if (packet.action === 'pong') {
             peer.send(
                 JSON.stringify({
                     action: 'latency',
@@ -153,6 +199,9 @@ io.on('connection', async (socket) => {
 
         const initialPackets = [
             {
+                action: 'authorize',
+            },
+            {
                 action: 'battery',
                 data: {
                     percent: disco.navData.battery,
@@ -167,6 +216,14 @@ io.on('connection', async (socket) => {
             {
                 action: 'altitude',
                 data: localCache.altitude,
+            },
+            {
+                action: 'flyingState',
+                data: localCache.flyingState,
+            },
+            {
+                action: 'canTakeOff',
+                data: localCache.canTakeOff,
             },
         ];
 
