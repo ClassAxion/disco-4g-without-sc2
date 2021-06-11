@@ -2,6 +2,7 @@ import express, { Application } from 'express';
 import { join } from 'path';
 import ffmpeg from 'fluent-ffmpeg';
 import wrtc from 'wrtc';
+import winston from 'winston';
 
 import Peer from 'simple-peer';
 import ParrotDisco from 'parrot-disco-api';
@@ -11,6 +12,23 @@ import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDisco
 
 let disco: ParrotDisco = new ParrotDisco({
     debug: !!process.env.DEBUG,
+});
+
+const format = winston.format.combine(
+    winston.format.label(),
+    winston.format.timestamp(),
+    winston.format.printf(({ level, message, _, timestamp }) => `${timestamp} ${level}: ${message}`),
+);
+
+const logger = winston.createLogger({
+    level: 'info',
+    format,
+    defaultMeta: { service: 'app' },
+    transports: [
+        new winston.transports.File({ filename: './error.log', level: 'error' }),
+        new winston.transports.File({ filename: './app.log', level: 'debug' }),
+        new winston.transports.Console({ format }),
+    ],
 });
 
 const localCache: {
@@ -28,23 +46,23 @@ const localCache: {
 let videoOutput;
 
 (async () => {
-    console.log(`Connecting to drone..`);
+    logger.info(`Connecting to drone..`);
 
     const isConnected: boolean = await disco.connect();
 
     if (!isConnected) {
-        console.error(`Disco not connected!`);
+        logger.error(`Disco not connected!`);
 
         process.exit(1);
     }
 
-    console.log(`Parrot Disco connected!`);
+    logger.info(`Parrot Disco connected!`);
 
-    console.log(`Enabling video stream..`);
+    logger.info(`Enabling video stream..`);
 
     disco.MediaStreaming.enableVideoStream();
 
-    console.log(`Starting video output to media stream..`);
+    logger.info(`Starting video output to media stream..`);
 
     videoOutput = await require('wrtc-to-ffmpeg')(wrtc).output({
         kind: 'video',
@@ -57,8 +75,8 @@ let videoOutput;
         .inputOption('-protocol_whitelist file,udp,rtp')
         .output(videoOutput.url)
         .outputOptions(videoOutput.options)
-        .on('start', (command) => console.log(`ffmpeg started:`, command))
-        .on('error', (error) => console.log(`ffmpeg failed:`, error))
+        .on('start', (command) => logger.debug(`ffmpeg started:`, command))
+        .on('error', (error) => logger.error(`ffmpeg failed:`, error))
         .run();
 })();
 
@@ -66,7 +84,7 @@ const port: number = Number(process.env.PORT || '8000');
 
 const app: Application = express();
 
-const server: Server = app.listen(port, () => console.log(`Server listening on ${port}`));
+const server: Server = app.listen(port, () => logger.info(`Server listening on ${port}`));
 
 app.use(express.static(join(__dirname, 'public')));
 
@@ -75,6 +93,8 @@ const io = require('socket.io')(server);
 let clients = [];
 
 const sendPacketToEveryone = (packet) => {
+    logger.debug(`Sending packet to everyone: ${JSON.stringify(packet)}`);
+
     for (const client of clients) {
         try {
             client.peer.send(JSON.stringify(packet));
@@ -109,7 +129,7 @@ let lastAltitudePacket = 0;
 disco.on('AltitudeChanged', ({ altitude }) => {
     localCache.altitude = altitude;
 
-    if (!lastAltitudePacket || Date.now() - lastAltitudePacket > 250) {
+    if (!lastAltitudePacket || Date.now() - lastAltitudePacket > 1000) {
         sendPacketToEveryone({
             action: 'altitude',
             data: altitude,
@@ -140,7 +160,7 @@ disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
 });
 
 io.on('connection', async (socket) => {
-    console.log(`Connection ${socket.id} made, creating peer..`);
+    logger.info(`Connection ${socket.id} made, creating peer..`);
 
     const stream = new wrtc.MediaStream();
 
@@ -167,6 +187,8 @@ io.on('connection', async (socket) => {
             if (packet.action && packet.action === 'camera') {
                 disco.Camera.move(packet.data.x, packet.data.y);
             } else if (packet.action && packet.action === 'takeOff') {
+                logger.info('Got take off command');
+
                 disco.Piloting.takeOff();
             }
         }
@@ -182,8 +204,6 @@ io.on('connection', async (socket) => {
     });
 
     peer.on('connect', () => {
-        console.log(`Peer connected`);
-
         pingInterval = setInterval(() => {
             peer.send(
                 JSON.stringify({
@@ -227,6 +247,8 @@ io.on('connection', async (socket) => {
             },
         ];
 
+        logger.info(`New client connected, sending initial packets: ${JSON.stringify(initialPackets)}`);
+
         for (const packet of initialPackets) {
             peer.send(JSON.stringify(packet));
         }
@@ -237,7 +259,7 @@ io.on('connection', async (socket) => {
     socket.on('signal', (data) => peer.signal(data));
 
     socket.on('disconnect', function () {
-        console.log('Socket disconnected, peer destroyed.');
+        logger.info('Socket disconnected, peer destroyed.');
 
         clearInterval(pingInterval);
 
