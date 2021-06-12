@@ -119,6 +119,7 @@ function connect() {
                     } else if (packet.data === 5) {
                         $('*[data-action="flyingState"][data-property="info"]').text('Emergency');
                     }
+                } else if (packet.action === 'event') {
                 }
             });
         }

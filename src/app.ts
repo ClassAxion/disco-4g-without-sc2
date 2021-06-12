@@ -125,6 +125,22 @@ disco.on('GPSFixStateChanged', ({ fixed }) => {
     });
 });
 
+disco.on('MavlinkPlayErrorStateChanged', (data) => {
+    sendPacketToEveryone({
+        action: 'event',
+        eventId: 'MavlinkPlayErrorStateChanged',
+        data,
+    });
+});
+
+disco.on('MavlinkFilePlayingStateChanged', (data) => {
+    sendPacketToEveryone({
+        action: 'event',
+        eventId: 'MavlinkFilePlayingStateChanged',
+        data,
+    });
+});
+
 let lastAltitudePacket = 0;
 
 disco.on('AltitudeChanged', ({ altitude }) => {
