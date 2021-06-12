@@ -161,7 +161,9 @@ disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
 });
 
 io.on('connection', async (socket) => {
-    logger.info(`Connection ${socket.id} made, creating peer..`);
+    const address = socket.handshake.address;
+
+    logger.info(`Connection ${socket.id} made from ${address}, creating peer..`);
 
     const stream = new wrtc.MediaStream();
 
@@ -220,9 +222,6 @@ io.on('connection', async (socket) => {
 
         const initialPackets = [
             {
-                action: 'authorize',
-            },
-            {
                 action: 'battery',
                 data: {
                     percent: disco.navData.battery,
@@ -248,7 +247,14 @@ io.on('connection', async (socket) => {
             },
         ];
 
-        logger.info(`New client connected, sending initial packets: ${JSON.stringify(initialPackets)}`);
+        if (socket.authorized) {
+            initialPackets.unshift({
+                action: 'authorize',
+                data: undefined,
+            });
+        }
+
+        logger.debug(`New client connected, sending initial packets: ${JSON.stringify(initialPackets)}`);
 
         for (const packet of initialPackets) {
             peer.send(JSON.stringify(packet));
@@ -259,7 +265,7 @@ io.on('connection', async (socket) => {
 
     socket.on('signal', (data) => peer.signal(data));
 
-    socket.on('disconnect', function () {
+    socket.on('disconnect', () => {
         logger.info('Socket disconnected, peer destroyed.');
 
         clearInterval(pingInterval);
