@@ -12,6 +12,7 @@ import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDisco
 
 let disco: ParrotDisco = new ParrotDisco({
     debug: !!process.env.DEBUG,
+    ip: process.env.DISCO_IP || '192.168.42.1',
 });
 
 const format = winston.format.combine(
@@ -71,7 +72,7 @@ let videoOutput;
     });
 
     ffmpeg()
-        .input('/home/classaxion/Storage/Repos/disco-4g-without-sc2/stream.sdp')
+        .input(join(__dirname, 'stream.sdp'))
         .inputOption('-protocol_whitelist file,udp,rtp')
         .output(videoOutput.url)
         .outputOptions(videoOutput.options)
