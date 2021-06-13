@@ -37,11 +37,13 @@ const localCache: {
     altitude?: number;
     flyingState?: ParrotDiscoFlyingState;
     canTakeOff?: boolean;
+    sensorStates?: { [key: string]: boolean };
 } = {
     gpsFixed: false,
     altitude: 0,
     flyingState: ParrotDiscoFlyingState.LANDED,
     canTakeOff: false,
+    sensorStates: {},
 };
 
 let videoOutput;
@@ -141,6 +143,10 @@ disco.on('MavlinkFilePlayingStateChanged', (data) => {
     });
 });
 
+disco.on('SensorsStatesListChanged', ({ sensorName, sensorState }) => {
+    localCache.sensorStates[sensorName] = sensorState === 1;
+});
+
 let lastAltitudePacket = 0;
 
 disco.on('AltitudeChanged', ({ altitude }) => {
@@ -166,15 +172,17 @@ disco.on('NumberOfSatelliteChanged', ({ numberOfSatellite: satellites }) => {
 });
 
 disco.on('PositionChanged', ({ latitude: lat, longitude: lon }) => {
-    sendPacketToEveryone({
-        action: 'gps',
-        data: {
-            location: {
-                lat,
-                lon,
+    if (lat !== 0 && lon !== 0) {
+        sendPacketToEveryone({
+            action: 'gps',
+            data: {
+                location: {
+                    lat,
+                    lon,
+                },
             },
-        },
-    });
+        });
+    }
 });
 
 disco.on('flyingState', ({ flyingState }) => {
@@ -189,12 +197,16 @@ disco.on('flyingState', ({ flyingState }) => {
 disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
     const canTakeOff = AvailabilityState === 1;
 
-    localCache.canTakeOff = canTakeOff;
+    if (Object.values(localCache.sensorStates).filter((sensor) => !sensor).length > 0) {
+        logger.error(`Can't take off! ${JSON.stringify(localCache.sensorStates)}`);
+    } else {
+        localCache.canTakeOff = canTakeOff;
 
-    sendPacketToEveryone({
-        action: 'canTakeOff',
-        data: canTakeOff,
-    });
+        sendPacketToEveryone({
+            action: 'canTakeOff',
+            data: canTakeOff,
+        });
+    }
 });
 
 io.on('connection', async (socket) => {
