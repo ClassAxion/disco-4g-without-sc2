@@ -166,6 +166,25 @@ disco.on('MavlinkFilePlayingStateChanged', (data) => {
     });
 });
 
+let oldSpeed = 0;
+
+let lastSpeedPacket = 0;
+
+disco.on('SpeedChanged', ({ speedX, speedY, speedZ }) => {
+    const speed = Math.sqrt(Math.pow(speedX, 2) + Math.pow(speedY, 2) + Math.pow(speedZ, 2));
+
+    if (!lastSpeedPacket || Date.now() - lastSpeedPacket > 1000) {
+        sendPacketToEveryone({
+            action: 'speed',
+            data: oldSpeed - speed,
+        });
+
+        lastSpeedPacket = Date.now();
+    }
+
+    oldSpeed = speed;
+});
+
 disco.on('SensorsStatesListChanged', ({ sensorName, sensorState }) => {
     localCache.sensorStates[sensorName] = sensorState === 1;
 });
@@ -194,17 +213,23 @@ disco.on('NumberOfSatelliteChanged', ({ numberOfSatellite: satellites }) => {
     });
 });
 
+let lastPositionPacket = 0;
+
 disco.on('PositionChanged', ({ latitude: lat, longitude: lon }) => {
-    if (lat !== 0 && lon !== 0) {
-        sendPacketToEveryone({
-            action: 'gps',
-            data: {
-                location: {
-                    lat,
-                    lon,
+    if (!lastPositionPacket || Date.now() - lastPositionPacket > 1000) {
+        if (lat !== 0 && lon !== 0) {
+            sendPacketToEveryone({
+                action: 'gps',
+                data: {
+                    location: {
+                        lat,
+                        lon,
+                    },
                 },
-            },
-        });
+            });
+
+            lastPositionPacket = Date.now();
+        }
     }
 });
 

@@ -193,6 +193,12 @@ function connect() {
                         $('*[data-action="flyingState"][data-property="info"]').text('Emergency');
                     }
                 } else if (packet.action === 'event') {
+                } else if (packet.action === 'speed') {
+                    const ms = packet.data;
+                    const kmh = ms * 3.6;
+
+                    $('*[data-action="speed"][property="m/s"]').text(ms.toFixed(1));
+                    $('*[data-action="speed"][property="km/h"]').text(kmh.toFixed(0));
                 }
             });
         }
