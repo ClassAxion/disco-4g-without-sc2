@@ -21,6 +21,33 @@ $('input[type=range]').on('input', function () {
     $(this).trigger('change');
 });
 
+const controllerPosition = {
+    lat: 53.34912,
+    lon: 17.64003,
+};
+
+const map = L.map('map').setView([controllerPosition.lat, controllerPosition.lon], 15);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Parrot Disco Live Map',
+}).addTo(map);
+
+const controllerLatLng = L.latLng(controllerPosition.lat, controllerPosition.lon);
+
+const controllerMarker = L.marker([controllerPosition.lat, controllerPosition.lon])
+    .addTo(map)
+    .bindPopup('Virtual controller location');
+
+const discoIcon = L.icon({
+    iconUrl: '/disco.png',
+    iconSize: [64, 64],
+});
+
+const discoMarker = L.marker([controllerPosition.lat, controllerPosition.lon], { icon: discoIcon })
+    .addTo(map)
+    .bindPopup('Disco location');
+
 function connect() {
     socket.connect();
 
@@ -87,10 +114,32 @@ function connect() {
                 } else if (packet.action === 'battery') {
                     $('*[data-action="battery"][data-property="percent"]').text(packet.data.percent);
                 } else if (packet.action === 'gps') {
-                    $('*[data-action="gps"][data-property="isFixed"]').css(
-                        'color',
-                        packet.data.isFixed ? 'green' : 'red',
-                    );
+                    if (packet.data.isFixed !== undefined) {
+                        $('*[data-action="gps"][data-property="isFixed"]').css(
+                            'color',
+                            packet.data.isFixed ? 'green' : 'red',
+                        );
+                    }
+
+                    if (packet.data.satellites !== undefined) {
+                        $('*[data-action="gps"][data-property="satellites"]').text(packet.data.satellites);
+                    }
+
+                    if (packet.data.location !== undefined) {
+                        const latLng = [packet.data.location.lat, packet.data.location.lon];
+
+                        discoMarker.setLatLng(latLng);
+
+                        map.panTo(latLng, {
+                            animate: true,
+                        });
+
+                        const discoLatLng = L.latLng(packet.data.location.lat, packet.data.location.lon);
+
+                        const distance = controllerLatLng.distanceTo(discoLatLng);
+
+                        $('*[data-action="distance"][data-property="controller"]').text(distance.toFixed(0));
+                    }
                 } else if (packet.action === 'latency') {
                     $('*[data-action="connection"][data-property="latency"]').text(packet.data);
                 } else if (packet.action === 'altitude') {

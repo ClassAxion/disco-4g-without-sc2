@@ -156,6 +156,27 @@ disco.on('AltitudeChanged', ({ altitude }) => {
     }
 });
 
+disco.on('NumberOfSatelliteChanged', ({ numberOfSatellite: satellites }) => {
+    sendPacketToEveryone({
+        action: 'gps',
+        data: {
+            satellites,
+        },
+    });
+});
+
+disco.on('PositionChanged', ({ latitude: lat, longitude: lon }) => {
+    sendPacketToEveryone({
+        action: 'gps',
+        data: {
+            location: {
+                lat,
+                lon,
+            },
+        },
+    });
+});
+
 disco.on('flyingState', ({ flyingState }) => {
     localCache.flyingState = flyingState;
 
