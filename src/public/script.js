@@ -136,7 +136,14 @@ function connect() {
                         }),
                     );
                 } else if (packet.action === 'battery') {
-                    $('*[data-action="battery"][data-property="percent"]').text(packet.data.percent);
+                    const batteryPercent = packet.data.percent;
+
+                    $('*[data-action="battery"][data-property="percent"]').text(batteryPercent);
+
+                    $('*[data-action="battery"][data-property="percent"]').css(
+                        'color',
+                        batteryPercent > 30 ? 'green' : 'red',
+                    );
                 } else if (packet.action === 'gps') {
                     if (packet.data.isFixed !== undefined) {
                         $('*[data-action="gps"][data-property="isFixed"]').css(
@@ -165,7 +172,14 @@ function connect() {
                         $('*[data-action="distance"][data-property="controller"]').text(distance.toFixed(0));
                     }
                 } else if (packet.action === 'latency') {
-                    $('*[data-action="connection"][data-property="latency"]').text(packet.data);
+                    const latency = packet.data;
+
+                    $('*[data-action="connection"][data-property="latency"]').text(latency);
+
+                    $('*[data-action="connection"][data-property="latency"]').css(
+                        'color',
+                        latency < 50 ? 'green' : 'red',
+                    );
                 } else if (packet.action === 'altitude') {
                     $('*[data-action="altitude"][data-property="meters"]').text(Number(packet.data.toFixed(1)));
                 } else if (packet.action === 'canTakeOff') {
