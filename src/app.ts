@@ -241,16 +241,16 @@ io.on('connection', async (socket) => {
             if (packet.action && packet.action === 'camera') {
                 disco.Camera.move(packet.data.x, packet.data.y);
             } else if (packet.action && packet.action === 'takeOff') {
-                logger.info('Got take off command');
+                logger.info(`Got take off command`);
 
                 if (takeOff) {
-                    disco.Piloting.cancelUserTakeOff();
-
-                    logger.info('Cancelled take off');
+                    logger.info(`Can't take off, user already take off`);
                 } else if (localCache.canTakeOff) {
                     disco.Piloting.userTakeOff();
 
-                    logger.info('user take off');
+                    takeOff = true;
+
+                    logger.info(`User taking off`);
                 } else {
                     logger.info(`Can't take off`);
                 }
