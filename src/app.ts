@@ -3,6 +3,7 @@ import { join } from 'path';
 import ffmpeg from 'fluent-ffmpeg';
 import wrtc from 'wrtc';
 import winston from 'winston';
+import fs from 'fs/promises';
 
 import Peer from 'simple-peer';
 import ParrotDisco from 'parrot-disco-api';
@@ -88,6 +89,28 @@ const port: number = Number(process.env.PORT || '8000');
 const app: Application = express();
 
 const server: Server = app.listen(port, () => logger.info(`Server listening on ${port}`));
+
+app.get('/flightplans/test', async (req, res) => {
+    const file: string = await fs.readFile(join(__dirname, 'flightplans', 'test.mavlink'), 'utf-8');
+    const lines = file
+        .split(/\r?\n/g)
+        .slice(1)
+        .filter(Boolean)
+        .map((line) => line.split(/\t/g));
+
+    const waypoints = lines.map((o) => ({
+        index: Number(o[0]),
+        type: Number(o[3]),
+        lat: Number(o[8]),
+        lon: Number(o[9]),
+        alt: Number(o[10]),
+    }));
+
+    res.json({
+        name: 'test',
+        waypoints,
+    });
+});
 
 app.use(express.static(join(__dirname, 'public')));
 
@@ -209,6 +232,12 @@ disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
     }
 });
 
+disco.on('disconnected', () => {
+    logger.info(`Disco disconnected`);
+
+    process.exit(1);
+});
+
 let takeOff = false;
 
 io.on('connection', async (socket) => {
@@ -252,6 +281,8 @@ io.on('connection', async (socket) => {
 
                     if (startFlightPlan) {
                         disco.Mavlink.start('/data/ftp/test.mavlink');
+
+                        logger.info(`Starting flight plan`);
                     } else {
                         disco.Piloting.userTakeOff();
 

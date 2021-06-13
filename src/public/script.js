@@ -28,6 +28,30 @@ const controllerPosition = {
 
 const map = L.map('map').setView([controllerPosition.lat, controllerPosition.lon], 15);
 
+const drawFlightPlan = true;
+
+if (drawFlightPlan) {
+    const waypointTypes = {
+        21: 'Linear landing',
+        16: 'Waypoint',
+        2500: 'Start',
+    };
+
+    $.get('/flightplans/test', ({ waypoints }) => {
+        waypoints = waypoints.filter((waypoint) => waypoint.lat && waypoint.lon);
+
+        for (const waypoint of waypoints) {
+            const type = waypointTypes[waypoint.type];
+
+            L.marker([waypoint.lat, waypoint.lon])
+                .addTo(map)
+                .bindPopup(`#${waypoint.index} ${type} ${waypoint.alt.toFixed(0)}M`);
+        }
+
+        L.polyline(waypoints.map((waypoint) => [waypoint.lat, waypoint.lon])).addTo(map);
+    });
+}
+
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Parrot Disco Live Map',
