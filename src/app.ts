@@ -246,11 +246,17 @@ io.on('connection', async (socket) => {
                 if (takeOff) {
                     logger.info(`Can't take off, user already take off`);
                 } else if (localCache.canTakeOff) {
-                    disco.Piloting.userTakeOff();
+                    const startFlightPlan = true;
 
                     takeOff = true;
 
-                    logger.info(`User taking off`);
+                    if (startFlightPlan) {
+                        disco.Mavlink.start('/data/ftp/test.mavlink');
+                    } else {
+                        disco.Piloting.userTakeOff();
+
+                        logger.info(`User taking off`);
+                    }
                 } else {
                     logger.info(`Can't take off`);
                 }
