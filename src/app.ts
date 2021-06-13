@@ -114,6 +114,8 @@ app.get('/flightplans/test', async (req, res) => {
 
 app.use(express.static(join(__dirname, 'public')));
 
+let isFirstAuthorized = false;
+
 const io = require('socket.io')(server);
 
 let clients = [];
@@ -272,7 +274,9 @@ io.on('connection', async (socket) => {
 
     const stream = new wrtc.MediaStream();
 
-    socket.authorized = true;
+    socket.authorized = !isFirstAuthorized;
+
+    isFirstAuthorized = true;
 
     stream.addTrack(videoOutput.track);
 
