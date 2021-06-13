@@ -209,6 +209,8 @@ disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
     }
 });
 
+let takeOff = false;
+
 io.on('connection', async (socket) => {
     const address = socket.handshake.address;
 
@@ -241,7 +243,17 @@ io.on('connection', async (socket) => {
             } else if (packet.action && packet.action === 'takeOff') {
                 logger.info('Got take off command');
 
-                disco.Piloting.takeOff();
+                if (takeOff) {
+                    disco.Piloting.cancelUserTakeOff();
+
+                    logger.info('Cancelled take off');
+                } else if (localCache.canTakeOff) {
+                    disco.Piloting.userTakeOff();
+
+                    logger.info('user take off');
+                } else {
+                    logger.info(`Can't take off`);
+                }
             }
         }
 
