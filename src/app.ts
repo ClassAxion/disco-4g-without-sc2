@@ -309,7 +309,7 @@ io.on('connection', async (socket) => {
                     takeOff = true;
 
                     if (startFlightPlan) {
-                        disco.Mavlink.start('/data/ftp/test.mavlink');
+                        disco.Mavlink.start('test.mavlink');
 
                         logger.info(`Starting flight plan`);
                     } else {
