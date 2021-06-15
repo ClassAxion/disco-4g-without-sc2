@@ -31,6 +31,10 @@ const localCache: {
     cameraMaxPanSpeed?: number;
     defaultCameraTilt?: number;
     defaultCameraPan?: number;
+    lastCalibrationStatus?: boolean;
+    lastHardwareStatus?: boolean;
+    lastHomeTypeStatus?: boolean;
+    lastRTHStatus?: boolean;
 } = {
     gpsFixed: false,
     altitude: 0,
@@ -41,6 +45,10 @@ const localCache: {
     cameraMaxPanSpeed: 0,
     defaultCameraTilt: 0,
     defaultCameraPan: 0,
+    lastCalibrationStatus: false,
+    lastHardwareStatus: true,
+    lastHomeTypeStatus: false,
+    lastRTHStatus: false,
 };
 
 let videoOutput;
@@ -144,6 +152,39 @@ const sendPacketToEveryone = (packet, onlyUnAuthorized = false) => {
     }
 };
 
+disco.on('MagnetoCalibrationRequiredState', ({ required }) => {
+    localCache.lastCalibrationStatus = required === 0;
+
+    sendPacketToEveryone({
+        action: 'check',
+        data: {
+            lastCalibrationStatus: localCache.lastCalibrationStatus,
+        },
+    });
+});
+
+disco.on('HomeTypeChanged', ({ type }) => {
+    localCache.lastHomeTypeStatus = type === 'TAKEOFF';
+
+    sendPacketToEveryone({
+        action: 'check',
+        data: {
+            lastHomeTypeStatus: localCache.lastHomeTypeStatus,
+        },
+    });
+});
+
+disco.on('HomeTypeChosenChanged', ({ type }) => {
+    localCache.lastRTHStatus = type === 'TAKEOFF';
+
+    sendPacketToEveryone({
+        action: 'check',
+        data: {
+            lastRTHStatus: localCache.lastRTHStatus,
+        },
+    });
+});
+
 disco.on('BatteryStateChanged', ({ percent }) => {
     sendPacketToEveryone({
         action: 'battery',
@@ -199,6 +240,17 @@ disco.on('SpeedChanged', ({ speedX, speedY, speedZ }) => {
 
 disco.on('SensorsStatesListChanged', ({ sensorName, sensorState }) => {
     localCache.sensorStates[sensorName] = sensorState === 1;
+
+    if (!sensorState) {
+        localCache.lastHardwareStatus = false;
+
+        sendPacketToEveryone({
+            action: 'check',
+            data: {
+                lastHardwareStatus: localCache.lastHardwareStatus,
+            },
+        });
+    }
 });
 
 let lastAltitudePacket = 0;
@@ -213,6 +265,27 @@ disco.on('AltitudeChanged', ({ altitude }) => {
         });
 
         lastAltitudePacket = Date.now();
+    }
+});
+
+let lastAttitudePacket = 0;
+
+disco.on('AttitudeChanged', ({ pitch, roll, yaw }) => {
+    if (!lastAttitudePacket || Date.now() - lastAttitudePacket > 1000) {
+        const yawDegress = yaw * (180 / Math.PI);
+        const pitchDegress = pitch * (180 / Math.PI);
+        const rollDegress = roll * (180 / Math.PI);
+
+        sendPacketToEveryone({
+            action: 'attitude',
+            data: {
+                pitch: pitchDegress,
+                yaw: yawDegress,
+                roll: rollDegress,
+            },
+        });
+
+        lastAttitudePacket = Date.now();
     }
 });
 
@@ -374,24 +447,29 @@ io.on('connection', async (socket) => {
             } else if (packet.action && packet.action === 'takeOff') {
                 logger.info(`Got take off command`);
 
-                if (takeOff) {
-                    logger.info(`Can't take off, user already take off`);
-                } else if (localCache.canTakeOff) {
-                    const startFlightPlan = true;
+                if (localCache.canTakeOff) {
+                    disco.Piloting.userTakeOff();
 
-                    takeOff = true;
-
-                    if (startFlightPlan) {
-                        disco.Mavlink.start('test.mavlink');
-
-                        logger.info(`Starting flight plan`);
-                    } else {
-                        disco.Piloting.userTakeOff();
-
-                        logger.info(`User taking off`);
-                    }
+                    logger.info(`User taking off`);
                 } else {
                     logger.info(`Can't take off`);
+                }
+            } else if (packet.action && packet.action === 'circle') {
+            } else if (packet.action && packet.action === 'flightPlan') {
+                logger.info(`Got flight plan start command`);
+
+                const name = packet.data;
+
+                if (localCache.canTakeOff) {
+                    disco.Mavlink.start(name + '.mavlink');
+
+                    logger.info(`User start flight plan`);
+                } else {
+                    logger.info(`Can't start flight plan`);
+                }
+            } else if (packet.action && packet.action === 'emergency') {
+                if (packet.data === 'landingFlightPlan') {
+                    disco.Mavlink.start('land.mavlink');
                 }
             }
         }
@@ -452,6 +530,15 @@ io.on('connection', async (socket) => {
                         maxTiltSpeed: localCache.cameraMaxTiltSpeed,
                         maxPanSpeed: localCache.cameraMaxPanSpeed,
                     },
+                },
+            },
+            {
+                action: 'check',
+                data: {
+                    lastRTHStatus: localCache.lastRTHStatus,
+                    lastHomeTypeStatus: localCache.lastHomeTypeStatus,
+                    lastCalibrationStatus: localCache.lastCalibrationStatus,
+                    lastHardwareStatus: localCache.lastHardwareStatus,
                 },
             },
         ];

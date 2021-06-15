@@ -37,9 +37,33 @@ $('#cameraTilt-degrees, #cameraPan-degrees').on('mouseup', function () {
     $(this).trigger('change');
 });
 
+$('#dronePitch-degrees, #droneRoll-degrees').on('mouseup', function () {
+    $(this).val(0);
+    $(this).trigger('change');
+});
+
+$('#dronePitch-degrees, #droneRoll-degrees').on('change', function () {
+    const pitch = $('#dronePitch-degrees').val();
+    const roll = $('#droneRoll-degrees').val();
+
+    peer.send(JSON.stringify({ action: 'move', data: { pitch, roll } }));
+});
+
 $('#cameraCenter').on('click', function () {
     if (isAuthorized) {
         peer.send(JSON.stringify({ action: 'camera-center' }));
+    }
+});
+
+$('#circleRight').on('click', function () {
+    if (isAuthorized) {
+        peer.send(JSON.stringify({ action: 'circle', data: 'CW' }));
+    }
+});
+
+$('#circleLeft').on('click', function () {
+    if (isAuthorized) {
+        peer.send(JSON.stringify({ action: 'circle', data: 'CCW' }));
     }
 });
 
@@ -275,6 +299,47 @@ function connect() {
                         $('#cameraPan-current').val(pan);
                         $('#cameraTilt-current').val(tilt);
                     }
+                } else if (packet.action === 'check') {
+                    const { lastRTHStatus, lastHomeTypeStatus, lastCalibrationStatus, lastHardwareStatus } =
+                        packet.data;
+
+                    if (lastRTHStatus !== undefined) {
+                        $('*[data-action="check"][data-property="rth-mode"]').css(
+                            'color',
+                            !lastRTHStatus ? 'red' : 'green',
+                        );
+                    }
+
+                    if (lastHomeTypeStatus !== undefined) {
+                        $('*[data-action="check"][data-property="home-type"]').css(
+                            'color',
+                            !lastHomeTypeStatus ? 'red' : 'green',
+                        );
+                    }
+
+                    if (lastCalibrationStatus !== undefined) {
+                        $('*[data-action="check"][data-property="calibration"]').css(
+                            'color',
+                            !lastCalibrationStatus ? 'red' : 'green',
+                        );
+                    }
+
+                    if (lastHardwareStatus !== undefined) {
+                        $('*[data-action="check"][data-property="hardware"]').css(
+                            'color',
+                            !lastHardwareStatus ? 'red' : 'green',
+                        );
+                    }
+                } else if (packet.action === 'attitude') {
+                    const { roll, pitch } = packet.data;
+
+                    if (roll !== undefined) {
+                        $('#droneRoll-current').val(roll);
+                    }
+
+                    if (pitch !== undefined) {
+                        $('#dronePitch-current').val(pitch);
+                    }
                 }
             });
         }
@@ -299,6 +364,12 @@ $(buttons.network).on('click', function () {
     }
 });
 
+let normalTakeOff = false;
+
 $(buttons.action).on('click', function () {
-    peer.send(JSON.stringify({ action: 'takeOff' }));
+    if (normalTakeOff) {
+        peer.send(JSON.stringify({ action: 'takeOff' }));
+    } else {
+        peer.send(JSON.stringify({ action: 'flightPlan', data: 'test' }));
+    }
 });

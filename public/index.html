@@ -121,6 +121,68 @@
                             </div>
                         </div>
                     </li>
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col text-center">
+                                <small title="Drone down / up"
+                                    ><i class="fas fa-fighter-jet"></i> <i class="fas fa-chevron-down"></i>
+                                    <i class="fas fa-chevron-up"></i
+                                ></small>
+                                <input
+                                    type="range"
+                                    value="0"
+                                    min="-75"
+                                    max="75"
+                                    class="form-range"
+                                    id="dronePitch-degrees"
+                                    disabled="true"
+                                    data-authorize="true"
+                                />
+                                <input
+                                    type="range"
+                                    value="0"
+                                    min="-128"
+                                    max="128"
+                                    class="form-range"
+                                    id="dronePitch-current"
+                                    disabled="true"
+                                />
+                            </div>
+                            <div class="col text-center">
+                                <small title="Drone left / right"
+                                    ><i class="fas fa-fighter-jet"></i> <i class="fas fa-chevron-left"></i>
+                                    <i class="fas fa-chevron-right"></i
+                                ></small>
+                                <input
+                                    type="range"
+                                    value="0"
+                                    min="-75"
+                                    max="75"
+                                    class="form-range"
+                                    id="droneRoll-degrees"
+                                    disabled="true"
+                                    data-authorize="true"
+                                />
+                                <input
+                                    type="range"
+                                    value="0"
+                                    min="-128"
+                                    max="128"
+                                    class="form-range"
+                                    id="droneRoll-current"
+                                    disabled="true"
+                                />
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item text-center">
+                        <button class="btn btn-secondary" data-authorize="true" disabled="" id="circleLeft">
+                            <i class="fas fa-redo-alt"></i>
+                        </button>
+                        <button class="btn btn-secondary" data-authorize="true" disabled="" id="circleRight">
+                            <i class="fas fa-undo-alt"></i>
+                        </button>
+                    </li>
                     <!--
                     <li class="list-group-item">Distance flown: <strong>N/a</strong> Meters</li>
                     <li class="list-group-item">Remaining battery: <strong>N/a</strong> minutes</li>
@@ -217,7 +279,9 @@
                                 </div>
                             </div>
                         </div>
-                        <small data-action="flyingState" data-property="info" title="Current drone status">Disconnected</small>
+                        <small data-action="flyingState" data-property="info" title="Current drone status"
+                            >Disconnected</small
+                        >
                     </div>
                 </div>
             </div>
@@ -234,6 +298,18 @@
                     <li class="list-group-item" title="Connection latency">
                         <strong data-action="connection" data-property="latency"><i class="fas fa-sync"></i></strong>
                         ms
+                    </li>
+                    <li class="list-group-item" title="Calibration" data-action="check" data-property="calibration">
+                        <i class="fas fa-ruler"></i>
+                    </li>
+                    <li class="list-group-item" title="Hardware condition" data-action="check" data-property="hardware">
+                        <i class="fas fa-cogs"></i>
+                    </li>
+                    <li class="list-group-item" title="Home type" data-action="check" data-property="home-type">
+                        <i class="fas fa-home"></i>
+                    </li>
+                    <li class="list-group-item" title="RTH mode" data-action="check" data-property="rth-mode">
+                        <i class="fas fa-map-marked-alt"></i>
                     </li>
                 </ul>
             </div>
