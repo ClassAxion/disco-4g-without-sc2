@@ -9,15 +9,15 @@ export enum Paths {
 }
 
 const development: { [key: number]: string } = {
-    [Paths.PUBLIC]: join(__dirname, '..', 'public'),
-    [Paths.FLIGHT_PLANS]: join(__dirname, '..', 'flightplans'),
-    [Paths.SDP]: join(__dirname, '..', 'stream.sdp'),
+    [Paths.PUBLIC]: join(__dirname, '..', '..', 'public'),
+    [Paths.FLIGHT_PLANS]: join(__dirname, '..', '..', 'flightplans'),
+    [Paths.SDP]: join(__dirname, '..', '..', 'stream.sdp'),
 };
 
 const production: { [key: number]: string } = {
-    [Paths.PUBLIC]: join(__dirname, 'public'),
-    [Paths.FLIGHT_PLANS]: join(__dirname, 'flightplans'),
-    [Paths.SDP]: join(__dirname, 'stream.sdp'),
+    [Paths.PUBLIC]: join(__dirname, '..', 'public'),
+    [Paths.FLIGHT_PLANS]: join(__dirname, '..', 'flightplans'),
+    [Paths.SDP]: join(__dirname, '..', 'stream.sdp'),
 };
 
 export default isDev ? development : production;
