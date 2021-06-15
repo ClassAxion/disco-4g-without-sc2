@@ -27,12 +27,16 @@ const localCache: {
     flyingState?: ParrotDiscoFlyingState;
     canTakeOff?: boolean;
     sensorStates?: { [key: string]: boolean };
+    cameraMaxTiltSpeed?: number;
+    cameraMaxPanSpeed?: number;
 } = {
     gpsFixed: false,
     altitude: 0,
     flyingState: ParrotDiscoFlyingState.LANDED,
     canTakeOff: false,
     sensorStates: {},
+    cameraMaxTiltSpeed: 0,
+    cameraMaxPanSpeed: 0,
 };
 
 let videoOutput;
@@ -263,6 +267,21 @@ disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
     }
 });
 
+disco.on('VelocityRange', ({ max_tilt: cameraMaxTiltSpeed, max_pan: cameraMaxPanSpeed }) => {
+    localCache.cameraMaxTiltSpeed = cameraMaxTiltSpeed;
+    localCache.cameraMaxPanSpeed = cameraMaxPanSpeed;
+
+    sendPacketToEveryone({
+        action: 'camera',
+        data: {
+            maxSpeed: {
+                maxTiltSpeed: cameraMaxTiltSpeed,
+                maxPanSpeed: cameraMaxPanSpeed,
+            },
+        },
+    });
+});
+
 disco.on('disconnected', () => {
     logger.info(`Disco disconnected`);
 
@@ -305,7 +324,11 @@ io.on('connection', async (socket) => {
 
         if (socket.authorized) {
             if (packet.action && packet.action === 'camera') {
-                disco.Camera.move(packet.data.x, packet.data.y);
+                if (packet.data.type === 'absolute') {
+                    disco.Camera.moveTo(packet.data.x, packet.data.y);
+                } else if (packet.data.type === 'degrees') {
+                    disco.Camera.move(packet.data.x, packet.data.y);
+                }
             } else if (packet.action && packet.action === 'takeOff') {
                 logger.info(`Got take off command`);
 

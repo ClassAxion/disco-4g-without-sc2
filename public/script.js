@@ -14,21 +14,21 @@ $('#cameraX, #cameraY').on('change', function () {
     const x = $('#cameraX').val();
     const y = $('#cameraY').val();
 
-    peer.send(JSON.stringify({ action: 'camera', data: { x, y } }));
+    peer.send(JSON.stringify({ action: 'camera', data: { type: 'absolute', x, y } }));
 });
 
-$('#cameraX-deg, #cameraY-deg').on('change', function () {
-    const x = $('#cameraX-deg').val();
-    const y = $('#cameraY-deg').val();
+$('#cameraX-degrees, #cameraY-degrees').on('change', function () {
+    const x = $('#cameraX-degrees').val();
+    const y = $('#cameraY-degrees').val();
 
-    peer.send(JSON.stringify({ action: 'camera-deg', data: { x, y } }));
+    peer.send(JSON.stringify({ action: 'camera', data: { type: 'degrees', x, y } }));
 });
 
 $('input[type=range]').on('input', function () {
     $(this).trigger('change');
 });
 
-$('#cameraX-deg, #cameraY-deg').on('mouseup', function () {
+$('#cameraX-degrees, #cameraY-degrees').on('mouseup', function () {
     $(this).val(0);
     $(this).trigger('change');
 });
@@ -169,19 +169,28 @@ function connect() {
                     }
 
                     if (packet.data.location !== undefined) {
-                        const latLng = [packet.data.location.lat, packet.data.location.lon];
+                        const { lat, lon } = packet.data.location;
+
+                        const latLng = [lat, lon];
 
                         discoMarker.setLatLng(latLng);
 
-                        map.panTo(latLng, {
-                            animate: true,
-                        });
+                        const mapAutoFollow = $('#mapAutoFollow').is(':checked');
 
-                        const discoLatLng = L.latLng(packet.data.location.lat, packet.data.location.lon);
+                        if (mapAutoFollow) {
+                            map.panTo(latLng, {
+                                animate: true,
+                            });
+                        }
+
+                        const discoLatLng = L.latLng(lat, lon);
 
                         const distance = controllerLatLng.distanceTo(discoLatLng);
 
                         $('*[data-action="distance"][data-property="controller"]').text(distance.toFixed(0));
+
+                        $('*[data-action="gps"][data-property="lat"]').text(lat.toFixed(5));
+                        $('*[data-action="gps"][data-property="lon"]').text(lon.toFixed(5));
                     }
                 } else if (packet.action === 'latency') {
                     const latency = packet.data;
@@ -225,6 +234,16 @@ function connect() {
 
                     $('*[data-action="speed"][property="m/s"]').text(ms.toFixed(1));
                     $('*[data-action="speed"][property="km/h"]').text(kmh.toFixed(0));
+                } else if (packet.action === 'camera') {
+                    if (packet.data.maxSpeed !== undefined) {
+                        const { maxTiltSpeed, maxPanSpeed } = packet.data;
+
+                        $('#cameraY-degrees').attr('max', maxTiltSpeed);
+                        $('#cameraY-degrees').attr('min', maxTiltSpeed * -1);
+
+                        $('#cameraX-degrees').attr('max', maxPanSpeed);
+                        $('#cameraX-degrees').attr('min', maxPanSpeed * -1);
+                    }
                 }
             });
         }
