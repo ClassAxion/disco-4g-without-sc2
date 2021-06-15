@@ -96,7 +96,7 @@ function connect() {
     socket.on('disconnect', function () {
         $(mainButton).text('Disconnected');
         $(mainButton).attr('disabled', true);
-        $('input').attr('disabled', true);
+        $('*[data-authorize="true"]').attr('disabled', true);
 
         try {
             peer.destroy();
@@ -139,7 +139,7 @@ function connect() {
                 if (packet.action === 'authorize') {
                     isAuthorized = true;
 
-                    $('input').attr('disabled', false);
+                    $('*[data-authorize="true"]').attr('disabled', false);
                 } else if (packet.action === 'ping') {
                     peer.send(
                         JSON.stringify({
@@ -236,13 +236,20 @@ function connect() {
                     $('*[data-action="speed"][property="km/h"]').text(kmh.toFixed(0));
                 } else if (packet.action === 'camera') {
                     if (packet.data.maxSpeed !== undefined) {
-                        const { maxTiltSpeed, maxPanSpeed } = packet.data;
+                        const { maxTiltSpeed, maxPanSpeed } = packet.data.maxSpeed;
 
                         $('#cameraY-degrees').attr('max', maxTiltSpeed);
                         $('#cameraY-degrees').attr('min', maxTiltSpeed * -1);
 
                         $('#cameraX-degrees').attr('max', maxPanSpeed);
                         $('#cameraX-degrees').attr('min', maxPanSpeed * -1);
+                    }
+
+                    if (packet.data.currentSpeed !== undefined) {
+                        const { x, y } = packet.data.currentSpeed;
+
+                        $('#cameraY-degrees').val(y);
+                        $('#cameraX-degrees').val(x);
                     }
                 }
             });

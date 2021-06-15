@@ -128,10 +128,12 @@ const io = require('socket.io')(server);
 
 let clients = [];
 
-const sendPacketToEveryone = (packet) => {
+const sendPacketToEveryone = (packet, onlyUnAuthorized = false) => {
     logger.debug(`Sending packet to everyone: ${JSON.stringify(packet)}`);
 
-    for (const client of clients) {
+    const filteredClients = onlyUnAuthorized ? clients.filter((client) => client.socket.authorized) : clients;
+
+    for (const client of filteredClients) {
         try {
             client.peer.send(JSON.stringify(packet));
         } catch {}
@@ -328,6 +330,21 @@ io.on('connection', async (socket) => {
                     disco.Camera.moveTo(packet.data.x, packet.data.y);
                 } else if (packet.data.type === 'degrees') {
                     disco.Camera.move(packet.data.x, packet.data.y);
+
+                    const { x, y } = packet.data;
+
+                    sendPacketToEveryone(
+                        {
+                            action: 'camera',
+                            data: {
+                                currentSpeed: {
+                                    x,
+                                    y,
+                                },
+                            },
+                        },
+                        true,
+                    );
                 }
             } else if (packet.action && packet.action === 'takeOff') {
                 logger.info(`Got take off command`);
@@ -402,6 +419,15 @@ io.on('connection', async (socket) => {
             {
                 action: 'canTakeOff',
                 data: localCache.canTakeOff,
+            },
+            {
+                action: 'camera',
+                data: {
+                    maxSpeed: {
+                        maxTiltSpeed: localCache.cameraMaxTiltSpeed,
+                        maxPanSpeed: localCache.cameraMaxPanSpeed,
+                    },
+                },
             },
         ];
 
