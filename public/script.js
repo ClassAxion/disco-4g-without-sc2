@@ -10,25 +10,25 @@ function setCameraOrientation(x, y) {
     peer.send(JSON.stringify({ action: 'camera', data: { x, y } }));
 }
 
-$('#cameraX, #cameraY').on('change', function () {
-    const x = $('#cameraX').val();
-    const y = $('#cameraY').val();
+$('#cameraTilt, #cameraPan').on('change', function () {
+    const tilt = $('#cameraTilt').val();
+    const pan = $('#cameraPan').val();
 
-    peer.send(JSON.stringify({ action: 'camera', data: { type: 'absolute', x, y } }));
+    peer.send(JSON.stringify({ action: 'camera', data: { type: 'absolute', tilt, pan } }));
 });
 
-$('#cameraX-degrees, #cameraY-degrees').on('change', function () {
-    const x = $('#cameraX-degrees').val();
-    const y = $('#cameraY-degrees').val();
+$('#cameraTilt-degrees, #cameraPan-degrees').on('change', function () {
+    const tilt = $('#cameraTilt-degrees').val();
+    const pan = $('#cameraPan-degrees').val();
 
-    peer.send(JSON.stringify({ action: 'camera', data: { type: 'degrees', x, y } }));
+    peer.send(JSON.stringify({ action: 'camera', data: { type: 'degrees', tilt, pan } }));
 });
 
 $('input[type=range]').on('input', function () {
     $(this).trigger('change');
 });
 
-$('#cameraX-degrees, #cameraY-degrees').on('mouseup', function () {
+$('#cameraTilt-degrees, #cameraPan-degrees').on('mouseup', function () {
     $(this).val(0);
     $(this).trigger('change');
 });
@@ -238,18 +238,25 @@ function connect() {
                     if (packet.data.maxSpeed !== undefined) {
                         const { maxTiltSpeed, maxPanSpeed } = packet.data.maxSpeed;
 
-                        $('#cameraY-degrees').attr('max', maxTiltSpeed);
-                        $('#cameraY-degrees').attr('min', maxTiltSpeed * -1);
+                        $('#cameraPan-degrees').attr('max', maxTiltSpeed);
+                        $('#cameraPan-degrees').attr('min', maxTiltSpeed * -1);
 
-                        $('#cameraX-degrees').attr('max', maxPanSpeed);
-                        $('#cameraX-degrees').attr('min', maxPanSpeed * -1);
+                        $('#cameraTilt-degrees').attr('max', maxPanSpeed);
+                        $('#cameraTilt-degrees').attr('min', maxPanSpeed * -1);
                     }
 
                     if (packet.data.currentSpeed !== undefined) {
-                        const { x, y } = packet.data.currentSpeed;
+                        const { tilt, pan } = packet.data.currentSpeed;
 
-                        $('#cameraY-degrees').val(y);
-                        $('#cameraX-degrees').val(x);
+                        $('#cameraPan-degrees').val(pan);
+                        $('#cameraTilt-degrees').val(tilt);
+                    }
+
+                    if (packet.data.orientation !== undefined) {
+                        const { tilt, pan } = packet.data.orientation;
+
+                        $('#cameraPan-current').val(pan);
+                        $('#cameraTilt-current').val(tilt);
                     }
                 }
             });

@@ -76,9 +76,18 @@
                                     min="-20"
                                     max="20"
                                     class="form-range"
-                                    id="cameraX-degrees"
+                                    id="cameraTilt-degrees"
                                     disabled="true"
                                     data-authorize="true"
+                                />
+                                <input
+                                    type="range"
+                                    value="-25"
+                                    min="-72"
+                                    max="22"
+                                    class="form-range"
+                                    id="cameraTilt-current"
+                                    disabled="true"
                                 />
                             </div>
                             <div class="col text-center">
@@ -92,43 +101,52 @@
                                     min="-20"
                                     max="20"
                                     class="form-range"
-                                    id="cameraY-degrees"
+                                    id="cameraPan-degrees"
                                     disabled="true"
                                     data-authorize="true"
+                                />
+                                <input
+                                    type="range"
+                                    value="0"
+                                    min="-34"
+                                    max="34"
+                                    class="form-range"
+                                    id="cameraPan-current"
+                                    disabled="true"
                                 />
                             </div>
                         </div>
                     </li>
                     <!--
-                            <li class="list-group-item">Distance flown: <strong>N/a</strong> Meters</li>
-                            <li class="list-group-item">Remaining battery: <strong>N/a</strong> minutes</li>
-                            <li class="list-group-item">
-                                Battery voltage: <strong data-action="battery" data-property="voltage">N/a</strong>V
-                            </li>
-                            <li class="list-group-item">LTE signal: <strong>N/a</strong> <strong>N/a</strong>%</li>
-                            -->
+                    <li class="list-group-item">Distance flown: <strong>N/a</strong> Meters</li>
+                    <li class="list-group-item">Remaining battery: <strong>N/a</strong> minutes</li>
+                    <li class="list-group-item">
+                        Battery voltage: <strong data-action="battery" data-property="voltage">N/a</strong>V
+                    </li>
+                    <li class="list-group-item">LTE signal: <strong>N/a</strong> <strong>N/a</strong>%</li>
+                    -->
                     <!--
                     <li class="list-group-item">
-                        <label for="cameraX" class="form-label">Camera Down/Up</label>
+                        <label for="cameraTilt" class="form-label">Camera Down/Up</label>
                         <input
                             type="range"
                             value="0"
                             min="-127"
                             max="127"
                             class="form-range"
-                            id="cameraX"
+                            id="cameraTilt"
                             disabled="true"
                         />
                     </li>
                     <li class="list-group-item">
-                        <label for="cameraY" class="form-label">Camera Left/Right</label>
+                        <label for="cameraPan" class="form-label">Camera Left/Right</label>
                         <input
                             type="range"
                             value="0"
                             min="-127"
                             max="127"
                             class="form-range"
-                            id="cameraY"
+                            id="cameraPan"
                             disabled="true"
                         />
                     </li>

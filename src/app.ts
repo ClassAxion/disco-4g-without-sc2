@@ -284,6 +284,24 @@ disco.on('VelocityRange', ({ max_tilt: cameraMaxTiltSpeed, max_pan: cameraMaxPan
     });
 });
 
+let lastCameraOrientationPacket = 0;
+
+disco.on('Orientation', ({ tilt, pan }) => {
+    if (!lastCameraOrientationPacket || Date.now() - lastCameraOrientationPacket > 1000) {
+        sendPacketToEveryone({
+            action: 'camera',
+            data: {
+                orientation: {
+                    tilt,
+                    pan,
+                },
+            },
+        });
+
+        lastCameraOrientationPacket = Date.now();
+    }
+});
+
 disco.on('disconnected', () => {
     logger.info(`Disco disconnected`);
 
@@ -327,19 +345,19 @@ io.on('connection', async (socket) => {
         if (socket.authorized) {
             if (packet.action && packet.action === 'camera') {
                 if (packet.data.type === 'absolute') {
-                    disco.Camera.moveTo(packet.data.x, packet.data.y);
+                    disco.Camera.moveTo(packet.data.tilt, packet.data.pan);
                 } else if (packet.data.type === 'degrees') {
-                    disco.Camera.move(packet.data.x, packet.data.y);
+                    disco.Camera.move(packet.data.tilt, packet.data.pan);
 
-                    const { x, y } = packet.data;
+                    const { tilt, pan } = packet.data;
 
                     sendPacketToEveryone(
                         {
                             action: 'camera',
                             data: {
                                 currentSpeed: {
-                                    x,
-                                    y,
+                                    tilt,
+                                    pan,
                                 },
                             },
                         },
