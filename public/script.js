@@ -1,10 +1,14 @@
 let peer,
-    mode = 0,
-    isAuthorized = false;
+    isAuthorized = false,
+    isNetworkConnected = false;
 
 const socket = io({ autoConnect: false, reconnection: false });
 
-const mainButton = $('button[data-action="button"][data-property="main"]');
+const buttons = {
+    network: $('button[data-action="button"][data-property="network"]'),
+    action: $('button[data-action="button"][data-property="action"]'),
+    emergency: $('button[data-action="button"][data-property="emergency"]'),
+};
 
 function setCameraOrientation(x, y) {
     peer.send(JSON.stringify({ action: 'camera', data: { x, y } }));
@@ -95,21 +99,27 @@ function connect() {
     socket.connect();
 
     socket.on('connect', function () {
-        $(mainButton).text('Connected');
+        $(buttons.network).html('Disconnect <i class="fas fa-times"></i>');
+        $(buttons.network).attr('disabled', false);
 
-        mode = 1;
+        isNetworkConnected = true;
     });
 
     socket.on('disconnect', function () {
-        $(mainButton).text('Disconnected');
-        $(mainButton).attr('disabled', true);
+        $(buttons.network).html('Connect <i class="fas fa-plug"></i>');
+
+        $(buttons.action).attr('disabled', true);
+        $(buttons.emergency).attr('disabled', true);
+
+        $('*[data-action="flyingState"][data-property="info"]').text('Disconnected');
+
         $('*[data-authorize="true"]').attr('disabled', true);
 
         try {
             peer.destroy();
         } catch {}
 
-        mode = -1;
+        isNetworkConnected = false;
     });
 
     socket.on('signal', function (data) {
@@ -211,24 +221,24 @@ function connect() {
                 } else if (packet.action === 'altitude') {
                     $('*[data-action="altitude"][data-property="meters"]').text(Number(packet.data.toFixed(1)));
                 } else if (packet.action === 'canTakeOff') {
-                    if (packet.data) {
-                        $(mainButton).text('Take off');
+                    if (packet.data && isAuthorized) {
+                        $(buttons.action).attr('disabled', false);
                     } else {
-                        $(mainButton).text("Can't take off");
-                    }
-
-                    if (isAuthorized) {
-                        $(mainButton).attr('disabled', !packet.data);
+                        $(buttons.action).attr('disabled', true);
                     }
                 } else if (packet.action === 'flyingState') {
                     if (packet.data === 0) {
                         $('*[data-action="flyingState"][data-property="info"]').text('Landed');
+
+                        $(buttons.emergency).attr('disabled', true);
                     } else if (packet.data === 1) {
                         $('*[data-action="flyingState"][data-property="info"]').text('Taking off');
                     } else if (packet.data === 2) {
                         $('*[data-action="flyingState"][data-property="info"]').text('Hovering');
                     } else if (packet.data === 3) {
                         $('*[data-action="flyingState"][data-property="info"]').text('In flight');
+
+                        $(buttons.emergency).attr('disabled', false);
                     } else if (packet.data === 4) {
                         $('*[data-action="flyingState"][data-property="info"]').text('Landing');
                     } else if (packet.data === 5) {
@@ -273,13 +283,22 @@ function connect() {
     });
 }
 
-$(mainButton).on('click', function () {
-    if (mode === 0) {
-        $(mainButton).attr('disabled', true);
-        $(mainButton).text('Connecting..');
+$(buttons.emergency).on('click', function () {
+    peer.send(JSON.stringify({ action: 'emergency', data: 'landingFlightPlan' }));
+});
+
+$(buttons.network).on('click', function () {
+    if (!isNetworkConnected) {
+        $(buttons.network).attr('disabled', true);
+        $(buttons.network).text('Connecting..');
 
         connect();
-    } else if (mode === 1) {
-        peer.send(JSON.stringify({ action: 'takeOff' }));
+    } else {
+        socket.disconnect();
+        peer.destroy();
     }
+});
+
+$(buttons.action).on('click', function () {
+    peer.send(JSON.stringify({ action: 'takeOff' }));
 });

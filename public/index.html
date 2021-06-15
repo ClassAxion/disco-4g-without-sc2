@@ -184,12 +184,40 @@
             <div class="col text-center">
                 <div class="card">
                     <div class="card-body">
-                        <div class="d-grid">
-                            <button class="btn btn-secondary" data-action="button" data-property="main">
-                                Connect <i class="fas fa-plug"></i>
-                            </button>
+                        <div class="row">
+                            <div class="col">
+                                <div class="d-grid">
+                                    <button
+                                        class="btn btn-secondary"
+                                        data-action="button"
+                                        data-property="action"
+                                        disabled=""
+                                    >
+                                        Take off <i class="fas fa-plane-departure"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="d-grid">
+                                    <button class="btn btn-secondary" data-action="button" data-property="network">
+                                        Connect <i class="fas fa-plug"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="d-grid">
+                                    <button
+                                        class="btn btn-secondary"
+                                        data-action="button"
+                                        data-property="emergency"
+                                        disabled=""
+                                    >
+                                        Return to home <i class="fas fa-home"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <small data-action="flyingState" data-property="info" title="Current drone status">N/a</small>
+                        <small data-action="flyingState" data-property="info" title="Current drone status">Disconnected</small>
                     </div>
                 </div>
             </div>
