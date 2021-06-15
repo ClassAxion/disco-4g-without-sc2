@@ -6,7 +6,7 @@
     "types": "build/app.d.ts",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "build": "npx tsc && cp package* build/ && cp stream.sdp build/ && cp -R src/public build/ && cp -R src/flightplans build/",
+        "build": "npx tsc && cp package* build/ && cp stream.sdp build/ && cp -R public build/ && cp -R flightplans build/",
         "format": "prettier --write \"src/*.ts\"",
         "lint": "tslint -p tsconfig.json",
         "watch": "nodemon"

@@ -4,12 +4,19 @@ import ffmpeg from 'fluent-ffmpeg';
 import wrtc from 'wrtc';
 import winston from 'winston';
 import fs from 'fs/promises';
+import { constants } from 'fs';
 
 import Peer from 'simple-peer';
 import ParrotDisco from 'parrot-disco-api';
 import { Server } from 'http';
 
+import isDev from './utils/isDev';
+
 import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDiscoFlyingState.enum';
+
+const startWithoutDisco: boolean = !!process.env.NO_DISCO;
+
+const flightPlansDirectory = isDev ? join(__dirname, 'flightplans', '..') : join(__dirname, 'flightplans');
 
 let disco: ParrotDisco = new ParrotDisco({
     debug: !!process.env.DEBUG,
@@ -49,40 +56,46 @@ const localCache: {
 
 let videoOutput;
 
-(async () => {
-    logger.info(`Connecting to drone..`);
+if (!startWithoutDisco) {
+    (async () => {
+        logger.info(`Connecting to drone..`);
 
-    const isConnected: boolean = await disco.connect();
+        const isConnected: boolean = await disco.connect(true);
 
-    if (!isConnected) {
-        logger.error(`Disco not connected!`);
+        if (!isConnected) {
+            logger.error(`Disco not connected!`);
 
-        process.exit(1);
-    }
+            process.exit(1);
+        }
 
-    logger.info(`Parrot Disco connected!`);
+        logger.info(`Parrot Disco connected!`);
 
-    logger.info(`Enabling video stream..`);
+        logger.info(`Enabling video stream..`);
 
-    disco.MediaStreaming.enableVideoStream();
+        disco.MediaStreaming.enableVideoStream();
 
-    logger.info(`Starting video output to media stream..`);
+        logger.info(`Starting video output to media stream..`);
 
-    videoOutput = await require('wrtc-to-ffmpeg')(wrtc).output({
-        kind: 'video',
-        width: 856,
-        height: 480,
-    });
+        videoOutput = await require('wrtc-to-ffmpeg')(wrtc).output({
+            kind: 'video',
+            width: 856,
+            height: 480,
+        });
 
-    ffmpeg()
-        .input(join(__dirname, 'stream.sdp'))
-        .inputOption('-protocol_whitelist file,udp,rtp')
-        .output(videoOutput.url)
-        .outputOptions(videoOutput.options)
-        .on('start', (command) => logger.debug(`ffmpeg started:`, command))
-        .on('error', (error) => logger.error(`ffmpeg failed:`, error))
-        .run();
-})();
+        const sdpPath = isDev ? join(__dirname, '..', 'stream.sdp') : join(__dirname, 'stream.sdp');
+
+        ffmpeg()
+            .input(sdpPath)
+            .inputOption('-protocol_whitelist file,udp,rtp')
+            .output(videoOutput.url)
+            .outputOptions(videoOutput.options)
+            .on('start', (command) => logger.debug(`ffmpeg started:`, command))
+            .on('error', (error) => logger.error(`ffmpeg failed:`, error))
+            .run();
+    })();
+} else {
+    logger.info(`Starting without disco`);
+}
 
 const port: number = Number(process.env.PORT || '8000');
 
@@ -90,8 +103,20 @@ const app: Application = express();
 
 const server: Server = app.listen(port, () => logger.info(`Server listening on ${port}`));
 
-app.get('/flightplans/test', async (req, res) => {
-    const file: string = await fs.readFile(join(__dirname, 'flightplans', 'test.mavlink'), 'utf-8');
+app.get('/flightplans/:name', async (req, res) => {
+    const { name } = req.params;
+
+    const flightPlanName: string = name + '.mavlink';
+
+    const flightPlanPath: string = join(flightPlansDirectory, flightPlanName);
+
+    try {
+        await fs.access(flightPlanPath, constants.F_OK);
+    } catch {
+        return res.sendStatus(404);
+    }
+
+    const file: string = await fs.readFile(flightPlanPath, 'utf-8');
     const lines = file
         .split(/\r?\n/g)
         .slice(1)
@@ -107,12 +132,14 @@ app.get('/flightplans/test', async (req, res) => {
     }));
 
     res.json({
-        name: 'test',
+        name,
         waypoints,
     });
 });
 
-app.use(express.static(join(__dirname, 'public')));
+const publicDirectory = isDev ? join(__dirname, '..', 'public') : join(__dirname, 'public');
+
+app.use(express.static(publicDirectory));
 
 let isFirstAuthorized = false;
 
@@ -262,7 +289,11 @@ disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
 disco.on('disconnected', () => {
     logger.info(`Disco disconnected`);
 
-    process.exit(1);
+    sendPacketToEveryone({
+        action: 'disconnected',
+    });
+
+    //process.exit(1);
 });
 
 let takeOff = false;
