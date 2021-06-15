@@ -1,6 +1,4 @@
 node_modules
-video-and-control-test1
 build
-xsrc
 *.sock
 *.log
