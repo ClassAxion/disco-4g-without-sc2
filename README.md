@@ -25,7 +25,6 @@ I just want to have fun with Parrot Disco and I need something new :)
 
 # WWW as SC2 details
 
--   Client must be in ZeroZier network (probably)
 -   Video feed using proxy server (with ffmpeg) using webrtc.
 -   Control using proxy server with webrtc.
 -   Live map with Disco and all flight parameters
