@@ -17,7 +17,19 @@ $('#cameraX, #cameraY').on('change', function () {
     peer.send(JSON.stringify({ action: 'camera', data: { x, y } }));
 });
 
+$('#cameraX-deg, #cameraY-deg').on('change', function () {
+    const x = $('#cameraX-deg').val();
+    const y = $('#cameraY-deg').val();
+
+    peer.send(JSON.stringify({ action: 'camera-deg', data: { x, y } }));
+});
+
 $('input[type=range]').on('input', function () {
+    $(this).trigger('change');
+});
+
+$('#cameraX-deg, #cameraY-deg').on('mouseup', function () {
+    $(this).val(0);
     $(this).trigger('change');
 });
 
