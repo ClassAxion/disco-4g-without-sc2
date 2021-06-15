@@ -2,7 +2,6 @@ import express, { Application } from 'express';
 import { join } from 'path';
 import ffmpeg from 'fluent-ffmpeg';
 import wrtc from 'wrtc';
-import winston from 'winston';
 import fs from 'fs/promises';
 import { constants } from 'fs';
 
@@ -11,6 +10,7 @@ import ParrotDisco from 'parrot-disco-api';
 import { Server } from 'http';
 
 import isDev from './utils/isDev';
+import logger from './utils/logger';
 
 import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDiscoFlyingState.enum';
 
@@ -21,23 +21,6 @@ const flightPlansDirectory = isDev ? join(__dirname, 'flightplans', '..') : join
 let disco: ParrotDisco = new ParrotDisco({
     debug: !!process.env.DEBUG,
     ip: process.env.DISCO_IP || '192.168.42.1',
-});
-
-const format = winston.format.combine(
-    winston.format.label(),
-    winston.format.timestamp(),
-    winston.format.printf(({ level, message, _, timestamp }) => `${timestamp} ${level}: ${message}`),
-);
-
-const logger = winston.createLogger({
-    level: 'info',
-    format,
-    defaultMeta: { service: 'app' },
-    transports: [
-        new winston.transports.File({ filename: './error.log', level: 'error' }),
-        new winston.transports.File({ filename: './app.log', level: 'debug' }),
-        new winston.transports.Console({ format }),
-    ],
 });
 
 const localCache: {
