@@ -138,7 +138,7 @@ disco.on('BatteryStateChanged', ({ percent }) => {
     sendPacketToEveryone({
         action: 'battery',
         data: {
-            percent: percent,
+            percent,
         },
     });
 });
@@ -351,7 +351,7 @@ io.on('connection', async (socket) => {
                     },
                 }),
             );
-        }, 2000);
+        }, 1000);
 
         peer.addStream(stream);
 
