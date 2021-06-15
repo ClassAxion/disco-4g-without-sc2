@@ -40,108 +40,126 @@
                         <div style="height: 380px" id="map"></div>
                     </div>
                 </div>
-                <div class="card mt-4">
-                    <div class="card-body">
-                        <ul class="list-group">
+                <ul class="list-group mt-4">
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col text-center">
+                                <small title="Camera down / up"
+                                    ><i class="fas fa-camera"></i> <i class="fas fa-chevron-down"></i>
+                                    <i class="fas fa-chevron-up"></i
+                                ></small>
+                                <input
+                                    type="range"
+                                    value="0"
+                                    min="-127"
+                                    max="127"
+                                    class="form-range"
+                                    id="cameraX-deg"
+                                    disabled="true"
+                                />
+                            </div>
+                            <div class="col text-center">
+                                <small title="Camera left / right"
+                                    ><i class="fas fa-camera"></i> <i class="fas fa-chevron-left"></i>
+                                    <i class="fas fa-chevron-right"></i
+                                ></small>
+                                <input
+                                    type="range"
+                                    value="0"
+                                    min="-127"
+                                    max="127"
+                                    class="form-range"
+                                    id="cameraY-deg"
+                                    disabled="true"
+                                />
+                            </div>
+                        </div>
+                    </li>
+                    <!--
                             <li class="list-group-item">Distance flown: <strong>N/a</strong> Meters</li>
                             <li class="list-group-item">Remaining battery: <strong>N/a</strong> minutes</li>
                             <li class="list-group-item">
                                 Battery voltage: <strong data-action="battery" data-property="voltage">N/a</strong>V
                             </li>
                             <li class="list-group-item">LTE signal: <strong>N/a</strong> <strong>N/a</strong>%</li>
-                            <li class="list-group-item">
-                                <label for="cameraX" class="form-label">Camera Down/Up</label>
-                                <input
-                                    type="range"
-                                    value="0"
-                                    min="-127"
-                                    max="127"
-                                    class="form-range"
-                                    id="cameraX"
-                                    disabled="true"
-                                />
-                            </li>
-                            <li class="list-group-item">
-                                <label for="cameraY" class="form-label">Camera Left/Right</label>
-                                <input
-                                    type="range"
-                                    value="0"
-                                    min="-127"
-                                    max="127"
-                                    class="form-range"
-                                    id="cameraY"
-                                    disabled="true"
-                                />
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                            -->
+                    <li class="list-group-item">
+                        <label for="cameraX" class="form-label">Camera Down/Up</label>
+                        <input
+                            type="range"
+                            value="0"
+                            min="-127"
+                            max="127"
+                            class="form-range"
+                            id="cameraX"
+                            disabled="true"
+                        />
+                    </li>
+                    <li class="list-group-item">
+                        <label for="cameraY" class="form-label">Camera Left/Right</label>
+                        <input
+                            type="range"
+                            value="0"
+                            min="-127"
+                            max="127"
+                            class="form-range"
+                            id="cameraY"
+                            disabled="true"
+                        />
+                    </li>
+                </ul>
             </div>
         </div>
         <div class="row mt-4">
             <div class="col text-center">
-                <div class="card">
-                    <div class="card-body">
-                        <ul class="list-group list-group-horizontal justify-content-center">
-                            <li class="list-group-item" title="Speed">
-                                <i class="fas fa-tachometer-alt"></i>
-                                <strong data-action="speed" property="m/s"><i class="fas fa-sync"></i></strong> m/s
-                            </li>
-                            <li class="list-group-item" title="Speed">
-                                <i class="fas fa-tachometer-alt"></i>
-                                <strong data-action="speed" property="km/h"><i class="fas fa-sync"></i></strong> km/h
-                            </li>
-                            <li class="list-group-item" title="Altitude">
-                                <i class="fas fa-level-up-alt"></i>
-                                <strong data-action="altitude" data-property="meters"
-                                    ><i class="fas fa-sync"></i
-                                ></strong>
-                                M
-                            </li>
-                            <li class="list-group-item" title="Distance to controller location">
-                                <i class="fas fa-share"></i>
-                                <strong data-action="distance" data-property="controller"
-                                    ><i class="fas fa-sync"></i
-                                ></strong>
-                                M
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                <ul class="list-group list-group-horizontal justify-content-center">
+                    <li class="list-group-item" title="Speed">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <strong data-action="speed" property="m/s"><i class="fas fa-sync"></i></strong> m/s
+                    </li>
+                    <li class="list-group-item" title="Speed">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <strong data-action="speed" property="km/h"><i class="fas fa-sync"></i></strong> km/h
+                    </li>
+                    <li class="list-group-item" title="Altitude">
+                        <i class="fas fa-level-up-alt"></i>
+                        <strong data-action="altitude" data-property="meters"><i class="fas fa-sync"></i></strong>
+                        M
+                    </li>
+                    <li class="list-group-item" title="Distance to controller location">
+                        <i class="fas fa-share"></i>
+                        <strong data-action="distance" data-property="controller"><i class="fas fa-sync"></i></strong>
+                        M
+                    </li>
+                </ul>
             </div>
             <div class="col text-center">
                 <div class="card">
                     <div class="card-body">
-                        <button class="btn btn-lg btn-secondary" data-action="button" data-property="main">
-                            Connect</button
-                        ><br />
+                        <div class="d-grid">
+                            <button class="btn btn-secondary" data-action="button" data-property="main">
+                                Connect <i class="fas fa-plug"></i>
+                            </button>
+                        </div>
                         <small data-action="flyingState" data-property="info" title="Current drone status">N/a</small>
                     </div>
                 </div>
             </div>
             <div class="col text-center">
-                <div class="card">
-                    <div class="card-body">
-                        <ul class="list-group list-group-horizontal justify-content-center">
-                            <li class="list-group-item" title="GPS fix and satellites count">
-                                <i class="fas fa-globe" data-action="gps" data-property="isFixed"></i>
-                                <strong data-action="gps" data-property="satellites"></strong>
-                            </li>
-                            <li class="list-group-item" title="Battery">
-                                <i class="fas fa-battery-full"></i>
-                                <strong data-action="battery" data-property="percent"
-                                    ><i class="fas fa-sync"></i></strong
-                                >%
-                            </li>
-                            <li class="list-group-item" title="Connection latency">
-                                <strong data-action="connection" data-property="latency"
-                                    ><i class="fas fa-sync"></i
-                                ></strong>
-                                ms
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                <ul class="list-group list-group-horizontal justify-content-center">
+                    <li class="list-group-item" title="GPS fix and satellites count">
+                        <i class="fas fa-globe" data-action="gps" data-property="isFixed"></i>
+                        <strong data-action="gps" data-property="satellites"></strong>
+                    </li>
+                    <li class="list-group-item" title="Battery">
+                        <i class="fas fa-battery-full"></i>
+                        <strong data-action="battery" data-property="percent"><i class="fas fa-sync"></i></strong>%
+                    </li>
+                    <li class="list-group-item" title="Connection latency">
+                        <strong data-action="connection" data-property="latency"><i class="fas fa-sync"></i></strong>
+                        ms
+                    </li>
+                </ul>
             </div>
         </div>
 
