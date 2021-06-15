@@ -64,9 +64,10 @@ if (drawFlightPlan) {
     });
 }
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Parrot Disco Live Map',
+L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+    attribution: 'Parrot Disco Live Map',
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
 }).addTo(map);
 
 const controllerLatLng = L.latLng(controllerPosition.lat, controllerPosition.lon);
