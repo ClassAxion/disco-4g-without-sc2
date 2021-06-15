@@ -182,8 +182,6 @@ disco.on('MavlinkFilePlayingStateChanged', (data) => {
     });
 });
 
-let oldSpeed = 0;
-
 let lastSpeedPacket = 0;
 
 disco.on('SpeedChanged', ({ speedX, speedY, speedZ }) => {
@@ -192,13 +190,11 @@ disco.on('SpeedChanged', ({ speedX, speedY, speedZ }) => {
     if (!lastSpeedPacket || Date.now() - lastSpeedPacket > 1000) {
         sendPacketToEveryone({
             action: 'speed',
-            data: oldSpeed - speed,
+            data: speed,
         });
 
         lastSpeedPacket = Date.now();
     }
-
-    oldSpeed = speed;
 });
 
 disco.on('SensorsStatesListChanged', ({ sensorName, sensorState }) => {
