@@ -33,6 +33,12 @@ $('#cameraTilt-degrees, #cameraPan-degrees').on('mouseup', function () {
     $(this).trigger('change');
 });
 
+$('#cameraCenter').on('click', function () {
+    if (isAuthorized) {
+        peer.send(JSON.stringify({ action: 'camera-center' }));
+    }
+});
+
 const controllerPosition = {
     lat: 53.34912,
     lon: 17.64003,

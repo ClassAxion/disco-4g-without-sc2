@@ -29,6 +29,8 @@ const localCache: {
     sensorStates?: { [key: string]: boolean };
     cameraMaxTiltSpeed?: number;
     cameraMaxPanSpeed?: number;
+    defaultCameraTilt?: number;
+    defaultCameraPan?: number;
 } = {
     gpsFixed: false,
     altitude: 0,
@@ -37,6 +39,8 @@ const localCache: {
     sensorStates: {},
     cameraMaxTiltSpeed: 0,
     cameraMaxPanSpeed: 0,
+    defaultCameraTilt: 0,
+    defaultCameraPan: 0,
 };
 
 let videoOutput;
@@ -302,6 +306,11 @@ disco.on('Orientation', ({ tilt, pan }) => {
     }
 });
 
+disco.on('defaultCameraOrientation', ({ tilt, pan }) => {
+    localCache.defaultCameraTilt = tilt;
+    localCache.defaultCameraPan = pan;
+});
+
 disco.on('disconnected', () => {
     logger.info(`Disco disconnected`);
 
@@ -343,7 +352,9 @@ io.on('connection', async (socket) => {
         const packet = JSON.parse(data.toString());
 
         if (socket.authorized) {
-            if (packet.action && packet.action === 'camera') {
+            if (packet.action && packet.action === 'camera-center') {
+                disco.Camera.moveTo(localCache.defaultCameraTilt, localCache.defaultCameraPan);
+            } else if (packet.action && packet.action === 'camera') {
                 if (packet.data.type === 'absolute') {
                     disco.Camera.moveTo(packet.data.tilt, packet.data.pan);
                 } else if (packet.data.type === 'degrees') {
