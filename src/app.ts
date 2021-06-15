@@ -9,14 +9,12 @@ import Peer from 'simple-peer';
 import ParrotDisco from 'parrot-disco-api';
 import { Server } from 'http';
 
-import isDev from './utils/isDev';
 import logger from './utils/logger';
+import paths, { Paths } from './utils/paths';
 
 import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDiscoFlyingState.enum';
 
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
-
-const flightPlansDirectory = isDev ? join(__dirname, 'flightplans', '..') : join(__dirname, 'flightplans');
 
 let disco: ParrotDisco = new ParrotDisco({
     debug: !!process.env.DEBUG,
@@ -65,10 +63,8 @@ if (!startWithoutDisco) {
             height: 480,
         });
 
-        const sdpPath = isDev ? join(__dirname, '..', 'stream.sdp') : join(__dirname, 'stream.sdp');
-
         ffmpeg()
-            .input(sdpPath)
+            .input(paths[Paths.SDP])
             .inputOption('-protocol_whitelist file,udp,rtp')
             .output(videoOutput.url)
             .outputOptions(videoOutput.options)
@@ -91,7 +87,7 @@ app.get('/flightplans/:name', async (req, res) => {
 
     const flightPlanName: string = name + '.mavlink';
 
-    const flightPlanPath: string = join(flightPlansDirectory, flightPlanName);
+    const flightPlanPath: string = join(paths[Paths.FLIGHT_PLANS], flightPlanName);
 
     try {
         await fs.access(flightPlanPath, constants.F_OK);
@@ -120,9 +116,7 @@ app.get('/flightplans/:name', async (req, res) => {
     });
 });
 
-const publicDirectory = isDev ? join(__dirname, '..', 'public') : join(__dirname, 'public');
-
-app.use(express.static(publicDirectory));
+app.use(express.static(paths[Paths.PUBLIC]));
 
 let isFirstAuthorized = false;
 
