@@ -32,9 +32,11 @@ I just want to have fun with Parrot Disco and I need something new :)
 
 # Roadmap
 
-1. Gather all possible information in this repository to know if it will be possible at all.
-2. Learn how to receive all parameters (battery, altitude, etc.)
-3. Create website that will display all the needed informations and could control the API
-4. If possible (due to weather) make test flight with starting flight plan from www and test video stream & camera control latency
-5. Add the rest of the functionality under control (mainly stick control, the throttle is unnecessary at this stage)
-6. TBA...
+1. :heavy_check_mark: Gather all possible information in this repository to know if it will be possible at all.
+2. :heavy_check_mark: Learn how to receive all parameters (battery, altitude, etc.)
+3. :heavy_check_mark: Create website that will display all the needed informations and could control the API
+4. :heavy_check_mark: If possible (due to weather) make test flight with starting flight plan from www and test video stream & camera control latency
+5. Modify website as needed (component size, arrangement, etc.)
+6. Make another test flight with flight plan
+7. Add the rest of the functionality under control (mainly stick control, the throttle is unnecessary at this stage)
+8. TBA...
