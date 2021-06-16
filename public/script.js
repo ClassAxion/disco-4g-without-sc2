@@ -43,8 +43,8 @@ $('#dronePitch-degrees, #droneRoll-degrees').on('mouseup', function () {
 });
 
 $('#dronePitch-degrees, #droneRoll-degrees').on('change', function () {
-    const pitch = $('#dronePitch-degrees').val();
-    const roll = $('#droneRoll-degrees').val();
+    const pitch = Number($('#dronePitch-degrees').val());
+    const roll = Number($('#droneRoll-degrees').val());
 
     peer.send(JSON.stringify({ action: 'move', data: { pitch, roll } }));
 });
@@ -64,6 +64,24 @@ $('#circleRight').on('click', function () {
 $('#circleLeft').on('click', function () {
     if (isAuthorized) {
         peer.send(JSON.stringify({ action: 'circle', data: 'CCW' }));
+    }
+});
+
+$('#flightPlanLand').on('click', function () {
+    if (isAuthorized) {
+        peer.send(JSON.stringify({ action: 'flightPlanStart', data: 'land', force: true }));
+    }
+});
+
+$('#startRth').on('click', function () {
+    if (isAuthorized) {
+        peer.send(JSON.stringify({ action: 'rth', data: true }));
+    }
+});
+
+$('#stopRth').on('click', function () {
+    if (isAuthorized) {
+        peer.send(JSON.stringify({ action: 'rth', data: false }));
     }
 });
 
@@ -370,6 +388,6 @@ $(buttons.action).on('click', function () {
     if (normalTakeOff) {
         peer.send(JSON.stringify({ action: 'takeOff' }));
     } else {
-        peer.send(JSON.stringify({ action: 'flightPlan', data: 'test' }));
+        peer.send(JSON.stringify({ action: 'flightPlanStart', data: 'test' }));
     }
 });

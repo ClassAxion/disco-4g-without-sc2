@@ -390,7 +390,12 @@ disco.on('disconnected', () => {
     //process.exit(1);
 });
 
-let takeOff = false;
+const validateAxis = (value: number): number => {
+    if (value > 75) return 75;
+    if (value < -75) return -75;
+
+    return value;
+};
 
 io.on('connection', async (socket) => {
     const address = socket.handshake.address;
@@ -455,12 +460,17 @@ io.on('connection', async (socket) => {
                     logger.info(`Can't take off`);
                 }
             } else if (packet.action && packet.action === 'circle') {
-            } else if (packet.action && packet.action === 'flightPlan') {
+                if (packet.data === 'CCW' || packet.data === 'CW') {
+                    disco.Piloting.circle(packet.data);
+                } else {
+                    logger.error(`Invalid circle direction: ${packet.data}`);
+                }
+            } else if (packet.action && packet.action === 'flightPlanStart') {
                 logger.info(`Got flight plan start command`);
 
                 const name = packet.data;
 
-                if (localCache.canTakeOff) {
+                if (localCache.canTakeOff || packet.force === true) {
                     disco.Mavlink.start(name + '.mavlink');
 
                     logger.info(`User start flight plan`);
@@ -471,6 +481,41 @@ io.on('connection', async (socket) => {
                 if (packet.data === 'landingFlightPlan') {
                     disco.Mavlink.start('land.mavlink');
                 }
+            } else if (packet.action && packet.action === 'rth') {
+                if (packet.data) {
+                    disco.Piloting.returnToHome();
+                } else {
+                    disco.Piloting.stopReturnToHome();
+                }
+            } else if (packet.action && packet.action === 'move') {
+                const { pitch, roll } = packet.data;
+
+                let isMoving = 0;
+
+                if (pitch !== undefined) {
+                    if (pitch !== 0) {
+                        disco.pilotingData.pitch = validateAxis(pitch);
+
+                        isMoving = 1;
+                    }
+                }
+
+                if (roll !== undefined) {
+                    if (roll !== 0) {
+                        disco.pilotingData.roll = validateAxis(roll);
+
+                        isMoving = 1;
+                    }
+                }
+
+                if (isMoving === 0) {
+                    disco.pilotingData.pitch = 0;
+                    disco.pilotingData.roll = 0;
+                }
+
+                disco.pilotingData.flag = isMoving;
+
+                console.log(disco.pilotingData);
             }
         }
 
