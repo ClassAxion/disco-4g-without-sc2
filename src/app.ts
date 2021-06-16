@@ -462,6 +462,8 @@ io.on('connection', async (socket) => {
             } else if (packet.action && packet.action === 'circle') {
                 if (packet.data === 'CCW' || packet.data === 'CW') {
                     disco.Piloting.circle(packet.data);
+
+                    logger.info(`Circling in direction: ${packet.data}`);
                 } else {
                     logger.error(`Invalid circle direction: ${packet.data}`);
                 }
@@ -480,12 +482,18 @@ io.on('connection', async (socket) => {
             } else if (packet.action && packet.action === 'emergency') {
                 if (packet.data === 'landingFlightPlan') {
                     disco.Mavlink.start('land.mavlink');
+
+                    logger.info(`Started landing flight plan`);
                 }
             } else if (packet.action && packet.action === 'rth') {
                 if (packet.data) {
                     disco.Piloting.returnToHome();
+
+                    logger.info(`Returning to home`);
                 } else {
                     disco.Piloting.stopReturnToHome();
+
+                    logger.info(`Return to home cancelled`);
                 }
             } else if (packet.action && packet.action === 'move') {
                 const { pitch, roll } = packet.data;
@@ -514,8 +522,6 @@ io.on('connection', async (socket) => {
                 }
 
                 disco.pilotingData.flag = isMoving;
-
-                console.log(disco.pilotingData);
             }
         }
 

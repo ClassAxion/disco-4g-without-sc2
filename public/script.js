@@ -32,12 +32,12 @@ $('input[type=range]').on('input', function () {
     $(this).trigger('change');
 });
 
-$('#cameraTilt-degrees, #cameraPan-degrees').on('mouseup', function () {
+$('#cameraTilt-degrees, #cameraPan-degrees').on('mouseleave', function () {
     $(this).val(0);
     $(this).trigger('change');
 });
 
-$('#dronePitch-degrees, #droneRoll-degrees').on('mouseup', function () {
+$('#dronePitch-degrees, #droneRoll-degrees').on('mouseleave', function () {
     $(this).val(0);
     $(this).trigger('change');
 });
@@ -70,6 +70,12 @@ $('#circleLeft').on('click', function () {
 $('#flightPlanLand').on('click', function () {
     if (isAuthorized) {
         peer.send(JSON.stringify({ action: 'flightPlanStart', data: 'land', force: true }));
+    }
+});
+
+$('#flightPlanTest').on('click', function () {
+    if (isAuthorized) {
+        peer.send(JSON.stringify({ action: 'flightPlanStart', data: 'test' }));
     }
 });
 
@@ -382,12 +388,6 @@ $(buttons.network).on('click', function () {
     }
 });
 
-let normalTakeOff = false;
-
 $(buttons.action).on('click', function () {
-    if (normalTakeOff) {
-        peer.send(JSON.stringify({ action: 'takeOff' }));
-    } else {
-        peer.send(JSON.stringify({ action: 'flightPlanStart', data: 'test' }));
-    }
+    peer.send(JSON.stringify({ action: 'takeOff' }));
 });
