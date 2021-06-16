@@ -107,7 +107,7 @@ if (drawFlightPlan) {
         2500: 'Start',
     };
 
-    $.get('/flightplans/test', ({ waypoints }) => {
+    $.get('/flightplans/land', ({ waypoints }) => {
         waypoints = waypoints.filter((waypoint) => waypoint.lat && waypoint.lon);
 
         for (const waypoint of waypoints) {
@@ -123,7 +123,7 @@ if (drawFlightPlan) {
 }
 
 L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-    attribution: 'Parrot Disco Live Map',
+    attribution: 'Parrot Disco Live Map | Land waypoints shown',
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
 }).addTo(map);
