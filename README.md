@@ -40,6 +40,6 @@ I just want to have fun with Parrot Disco and I need something new :)
 7. :heavy_check_mark: Add the rest of the functionality under control (mainly stick control, the throttle is unnecessary at this stage)
 8. :heavy_check_mark: Make first manual test flight
 9. :heavy_check_mark: Connect some gamepad for better control
-10. :heavy_check_mark: Make another manual flight to test gamepad
+10. Make another manual flight to test gamepad
 11. Create new dashboard for better view and arrangement
 12. TBA...
