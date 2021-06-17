@@ -22,10 +22,12 @@ $('#cameraTilt, #cameraPan').on('change', function () {
 });
 
 $('#cameraTilt-degrees, #cameraPan-degrees').on('change', function () {
-    const tilt = $('#cameraTilt-degrees').val();
-    const pan = $('#cameraPan-degrees').val();
+    if (isAuthorized) {
+        const tilt = $('#cameraTilt-degrees').val();
+        const pan = $('#cameraPan-degrees').val();
 
-    peer.send(JSON.stringify({ action: 'camera', data: { type: 'degrees', tilt, pan } }));
+        peer.send(JSON.stringify({ action: 'camera', data: { type: 'degrees', tilt, pan } }));
+    }
 });
 
 $('input[type=range]').on('input', function () {
@@ -43,10 +45,12 @@ $('#dronePitch-degrees, #droneRoll-degrees').on('mouseleave', function () {
 });
 
 $('#dronePitch-degrees, #droneRoll-degrees').on('change', function () {
-    const pitch = Number($('#dronePitch-degrees').val());
-    const roll = Number($('#droneRoll-degrees').val());
+    if (isAuthorized) {
+        const pitch = Number($('#dronePitch-degrees').val());
+        const roll = Number($('#droneRoll-degrees').val());
 
-    peer.send(JSON.stringify({ action: 'move', data: { pitch, roll } }));
+        peer.send(JSON.stringify({ action: 'move', data: { pitch, roll } }));
+    }
 });
 
 $('#cameraCenter').on('click', function () {
@@ -199,7 +203,7 @@ function connect() {
             peer.on('data', (data) => {
                 const packet = JSON.parse(data.toString());
 
-                console.log(packet);
+                console.debug(packet);
 
                 if (packet.action === 'authorize') {
                     isAuthorized = true;

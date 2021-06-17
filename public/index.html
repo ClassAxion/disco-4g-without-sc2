@@ -230,6 +230,15 @@
                         >
                             <i class="fas fa-home"></i>
                         </button>
+                        <input
+                            type="checkbox"
+                            class="btn-check"
+                            id="gamepadEnabled"
+                            autocomplete="off"
+                            data-authorize="true"
+                            disabled=""
+                        />
+                        <label class="btn btn-secondary" for="gamepadEnabled"><i class="fas fa-gamepad"></i></label>
                     </li>
                     <!--
                     <li class="list-group-item">Distance flown: <strong>N/a</strong> Meters</li>
@@ -359,6 +368,9 @@
                     <li class="list-group-item" title="RTH mode" data-action="check" data-property="rth-mode">
                         <i class="fas fa-map-marked-alt"></i>
                     </li>
+                    <li class="list-group-item" title="Gamepad status" data-action="gamepad" data-property="status">
+                        <i class="fas fa-gamepad"></i>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -369,5 +381,6 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.11.0/simplepeer.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
         <script src="/script.js"></script>
+        <script src="/gamepad.js"></script>
     </body>
 </html>

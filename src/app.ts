@@ -408,7 +408,7 @@ io.on('connection', async (socket) => {
 
     isFirstAuthorized = true;
 
-    stream.addTrack(videoOutput.track);
+    if (videoOutput) stream.addTrack(videoOutput.track);
 
     const peer = new Peer({ initiator: true, wrtc });
 
@@ -425,7 +425,7 @@ io.on('connection', async (socket) => {
     peer.on('data', (data) => {
         const packet = JSON.parse(data.toString());
 
-        if (socket.authorized) {
+        if (socket.authorized && !startWithoutDisco) {
             if (packet.action && packet.action === 'camera-center') {
                 disco.Camera.moveTo(localCache.defaultCameraTilt, localCache.defaultCameraPan);
             } else if (packet.action && packet.action === 'camera') {
