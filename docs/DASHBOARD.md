@@ -8,8 +8,8 @@
 
 ## On the top right
 
--   [] Latency in ms (with green/orange/red color)
--   [] Health status (checking that everything with the equipment is ok)
+-   [ ] Latency in ms (with green/orange/red color)
+-   [ ] Health status (checking that everything with the equipment is ok)
 -   Gamepad status (showing if gamepad is connected)
 -   pitch & roll position
 -   flight time
