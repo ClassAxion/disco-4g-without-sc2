@@ -1,10 +1,13 @@
-## On the top center
+## On the top left
 
 -   Speed meter (only in one unit, m/s or km/h)
 -   Altitude meter
 -   Distance meter
--   GPS fix + satellites count
 -   Battery percent (with green/orange/red color)
+-   GPS fix + satellites count
+
+## On the top right
+
 -   Latency in ms (with green/orange/red color)
 -   Health status (checking that everything with the equipment is ok)
 -   Gamepad status (showing if gamepad is connected)
@@ -17,7 +20,7 @@
 -   Minimap preview
 -   Current location (lat + lon)
 
-## On the top bottom
+## On the bottom center
 
 -   Connect button
 -   Take off button
