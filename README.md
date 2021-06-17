@@ -35,7 +35,11 @@ I just want to have fun with Parrot Disco and I need something new :)
 2. :heavy_check_mark: Learn how to receive all parameters (battery, altitude, etc.)
 3. :heavy_check_mark: Create website that will display all the needed informations and could control the API
 4. :heavy_check_mark: If possible (due to weather) make test flight with starting flight plan from www and test video stream & camera control latency
-5. Modify website as needed (component size, arrangement, etc.)
-6. Make another test flight with flight plan
-7. Add the rest of the functionality under control (mainly stick control, the throttle is unnecessary at this stage)
-8. TBA...
+5. :heavy_check_mark: Modify website as needed (component size, arrangement, etc.)
+6. :heavy_check_mark: Make another test flight with flight plan
+7. :heavy_check_mark: Add the rest of the functionality under control (mainly stick control, the throttle is unnecessary at this stage)
+8. :heavy_check_mark: Make first manual test flight
+9. :heavy_check_mark: Connect some gamepad for better control
+10. :heavy_check_mark: Make another manual flight to test gamepad
+11. Create new dashboard for better view and arrangement
+12. TBA...
