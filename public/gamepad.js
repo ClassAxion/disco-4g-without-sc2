@@ -24,6 +24,9 @@ const timings = {};
 const variableMap = (value, inMin, inMax, outMin, outMax) =>
     ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
 
+const lastSentCameraMovement = { tilt: null, pan: null };
+let lastAction = null;
+
 const gamepadLoop = () => {
     const gamepads = navigator.getGamepads
         ? navigator.getGamepads()
@@ -98,6 +101,12 @@ const gamepadLoop = () => {
     const isCameraMovement = axes[axisMap['control-mode']] === 1;
 
     if (isCameraMovement) {
+        if (lastAction !== 'camera') {
+            $('#dronePitch-degrees, #droneRoll-degrees').val(0).trigger('change');
+
+            lastAction = 'camera';
+        }
+
         let tiltRaw = axes[axisMap['camera-tilt']];
         let panRaw = axes[axisMap['camera-pan']];
 
@@ -108,11 +117,20 @@ const gamepadLoop = () => {
 
         const pan = Number(variableMap(panRaw, -1, 1, -20, 20).toFixed(0));
 
-        $('#cameraTilt-degrees').val(tilt).trigger('change');
-        $('#cameraPan-degrees').val(pan).trigger('change');
+        if (lastSentCameraMovement.tilt !== tilt || lastSentCameraMovement.pan !== pan) {
+            lastSentCameraMovement.tilt = tilt;
+            lastSentCameraMovement.pan = pan;
 
-        $('#dronePitch-degrees, #droneRoll-degrees').val(0).trigger('change');
+            $('#cameraTilt-degrees').val(tilt).trigger('change');
+            $('#cameraPan-degrees').val(pan).trigger('change');
+        }
     } else {
+        if (lastAction !== 'drone') {
+            $('#cameraTilt-degrees, #cameraPan-degrees').val(0).trigger('change');
+
+            lastAction = 'drone';
+        }
+
         let rollRaw = axes[axisMap.roll];
         let pitchRaw = axes[axisMap.pitch];
 
@@ -125,23 +143,29 @@ const gamepadLoop = () => {
 
         $('#droneRoll-degrees').val(roll).trigger('change');
         $('#dronePitch-degrees').val(pitch).trigger('change');
-
-        $('#cameraTilt-degrees, #cameraPan-degrees').val(0).trigger('change');
     }
 
     setTimeout(gamepadLoop, 50);
 };
 
+let isGamepadConnected = false;
+
 window.addEventListener('gamepadconnected', (e) => {
     const gamepad = navigator.getGamepads()[e.gamepad.index];
 
-    if (gamepad.id === 'Saitek Side Panel Control Deck (Vendor: 0738 Product: 2218)' && gamepad.index === 0) {
+    if (gamepad.id === 'Saitek Side Panel Control Deck (Vendor: 0738 Product: 2218)' && !isGamepadConnected) {
         $('*[data-action="gamepad"][data-property="status"]').css('color', 'green');
 
+        isGamepadConnected = true;
+
         setTimeout(gamepadLoop);
+    } else {
+        console.log(`Got invalid gamepad: ${gamepad.id} with index ${gamepad.index}`);
     }
 });
 
 window.addEventListener('gamepaddisconnected', () => {
     $('*[data-action="gamepad"][data-property="status"]').css('color', 'red');
+
+    isGamepadConnected = false;
 });
