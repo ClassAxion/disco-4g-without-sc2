@@ -21,6 +21,8 @@ let disco: ParrotDisco = new ParrotDisco({
     ip: process.env.DISCO_IP || '192.168.42.1',
 });
 
+let isConnected: boolean = false;
+
 const localCache: {
     gpsFixed?: boolean;
     altitude?: number;
@@ -51,13 +53,33 @@ const localCache: {
     lastRTHStatus: false,
 };
 
-let videoOutput;
+let videoOutput, ffmpegProcess;
+
+const startStream = async () => {
+    logger.info(`Starting video output to media stream..`);
+
+    videoOutput = await require('wrtc-to-ffmpeg')(wrtc).output({
+        kind: 'video',
+        width: 856,
+        height: 480,
+    });
+
+    ffmpegProcess = ffmpeg()
+        .input(paths[Paths.SDP])
+        .inputOption('-protocol_whitelist file,udp,rtp')
+        .output(videoOutput.url)
+        .outputOptions(videoOutput.options)
+        .on('start', (command) => logger.debug(`Video bridge started:`, command))
+        .on('error', (error) => logger.error(`Video bridge exited:`, error));
+
+    ffmpegProcess.run();
+};
 
 if (!startWithoutDisco) {
     (async () => {
         logger.info(`Connecting to drone..`);
 
-        const isConnected: boolean = await disco.connect(true);
+        isConnected = await disco.connect();
 
         if (!isConnected) {
             logger.error(`Disco not connected!`);
@@ -71,22 +93,7 @@ if (!startWithoutDisco) {
 
         disco.MediaStreaming.enableVideoStream();
 
-        logger.info(`Starting video output to media stream..`);
-
-        videoOutput = await require('wrtc-to-ffmpeg')(wrtc).output({
-            kind: 'video',
-            width: 856,
-            height: 480,
-        });
-
-        ffmpeg()
-            .input(paths[Paths.SDP])
-            .inputOption('-protocol_whitelist file,udp,rtp')
-            .output(videoOutput.url)
-            .outputOptions(videoOutput.options)
-            .on('start', (command) => logger.debug(`ffmpeg started:`, command))
-            .on('error', (error) => logger.error(`ffmpeg failed:`, error))
-            .run();
+        await startStream();
     })();
 } else {
     logger.info(`Starting without disco`);
@@ -380,11 +387,55 @@ disco.on('defaultCameraOrientation', ({ tilt, pan }) => {
     localCache.defaultCameraPan = pan;
 });
 
-disco.on('disconnected', () => {
-    logger.info(`Disco disconnected`);
+let reconneting = false;
+
+disco.on('disconnected', async () => {
+    isConnected = false;
+
+    if (!reconneting) {
+        ffmpegProcess.kill();
+
+        for (const client of clients) {
+            client.peer.removeStream(client.socket.stream);
+        }
+
+        logger.info(`Disco disconnected, reconnecting..`);
+
+        reconneting = true;
+
+        const isDiscovered: boolean = await disco.discover();
+
+        if (isDiscovered) {
+            isConnected = true;
+
+            logger.info(`Disco discovered again!`);
+
+            logger.info(`Enabling video stream again..`);
+
+            disco.MediaStreaming.enableVideoStream();
+
+            logger.info(`Starting new video stream..`);
+
+            await startStream();
+
+            const stream = new wrtc.MediaStream();
+
+            stream.addTrack(videoOutput.track);
+
+            for (const client of clients) {
+                client.peer.addStream(stream);
+
+                client.socket.stream = stream;
+            }
+        } else {
+            logger.info(`Disco not discover`);
+        }
+
+        reconneting = false;
+    }
 
     sendPacketToEveryone({
-        action: 'disconnected',
+        action: 'disco-disconnected',
     });
 
     //process.exit(1);
@@ -403,6 +454,8 @@ io.on('connection', async (socket) => {
     logger.info(`Connection ${socket.id} made from ${address}, creating peer..`);
 
     const stream = new wrtc.MediaStream();
+
+    socket.stream = stream;
 
     socket.authorized = !isFirstAuthorized;
 
