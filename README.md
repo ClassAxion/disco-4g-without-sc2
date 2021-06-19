@@ -1,3 +1,7 @@
+# WARNING! This project is experimental and you can damage your equipment!
+
+I'm not responsible for any damage caused by a software error. If you don't know how to use this project correctly, don't use it or you will lose your parrot!
+
 # Parrot Disco without SC2 only on LTE
 
 I just want to have fun with Parrot Disco and I need something new :)
@@ -31,15 +35,15 @@ I just want to have fun with Parrot Disco and I need something new :)
 
 # Roadmap
 
-1. :heavy_check_mark: Gather all possible information in this repository to know if it will be possible at all.
-2. :heavy_check_mark: Learn how to receive all parameters (battery, altitude, etc.)
-3. :heavy_check_mark: Create website that will display all the needed informations and could control the API
-4. :heavy_check_mark: If possible (due to weather) make test flight with starting flight plan from www and test video stream & camera control latency
-5. :heavy_check_mark: Modify website as needed (component size, arrangement, etc.)
-6. :heavy_check_mark: Make another test flight with flight plan
-7. :heavy_check_mark: Add the rest of the functionality under control (mainly stick control, the throttle is unnecessary at this stage)
-8. :heavy_check_mark: Make first manual test flight
-9. :heavy_check_mark: Connect some gamepad for better control
-10. Make another manual flight to test gamepad
-11. Create new dashboard for better view and arrangement
-12. TBA...
+-   :heavy_check_mark: Gather all possible information in this repository to know if it will be possible at all.
+-   :heavy_check_mark: Learn how to receive all parameters (battery, altitude, etc.)
+-   :heavy_check_mark: Create website that will display all the needed informations and could control the API
+-   :heavy_check_mark: If possible (due to weather) make test flight with starting flight plan from www and test video stream & camera control latency
+-   :heavy_check_mark: Modify website as needed (component size, arrangement, etc.)
+-   :heavy_check_mark: Make another test flight with flight plan
+-   :heavy_check_mark: Add the rest of the functionality under control (mainly stick control, the throttle is unnecessary at this stage)
+-   :heavy_check_mark: Make first manual test flight
+-   :heavy_check_mark: Connect some gamepad for better control
+-   Make another manual flight to test gamepad
+-   Create new dashboard for better view and arrangement
+-   TBA...
