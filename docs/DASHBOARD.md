@@ -1,6 +1,6 @@
 ## On the top left
 
--   Speed meter (only in one unit, m/s or km/h)
+-   Speed meter (only in one unit selected in settings, m/s or km/h)
 -   Altitude meter
 -   Distance meter
 -   Battery percent (with green/orange/red color)
@@ -77,21 +77,37 @@
 
 ### After click on Menu
 
--   Settings button
+-   Global settings button
 -   Users button
--   Camera button
+-   Camera settings button
+-   RTH settings button
 
-### After click on Settings button
+### After click on Global settings button
 
+-   Min / max altitute
+-   Circle altitude and direction (CW & CCW)
 -   Default circle direction (CW & CCW)
 -   Default camera position
 -   Unit (m/s or km/h)
 -   Take off button action (normal take off or flight plan start)
 -   Battery warning percent (20% default)
 -   Distance warning
--   Set home position
 
 ### After click on Users button
 
 -   Users list (id, location)
 -   User permission (for pitch, roll, camera movement)
+
+### After click on Camera settings button
+
+-   Picture type (raw, jpeg, snapshot, jpeg_fisheye)
+-   Auto white balance (auto, tungsten, daylight, cloudy, cool_white)
+-   Video stabilization mode (roll_pitch, pitch, roll, none)
+-   Saturation [-100, 100]
+-   Exposition [-3, 3]
+
+### After click on RTH settings button
+
+-   Set home location (selecting location from map)
+-   Set RTH type (TAKEOFF or HOME position)
+-   Set RTH delay (1-5s)
