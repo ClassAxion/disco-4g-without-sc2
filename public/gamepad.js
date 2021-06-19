@@ -153,7 +153,7 @@ let isGamepadConnected = false;
 window.addEventListener('gamepadconnected', (e) => {
     const gamepad = navigator.getGamepads()[e.gamepad.index];
 
-    if (gamepad.id === 'Saitek Side Panel Control Deck (Vendor: 0738 Product: 2218)' && !isGamepadConnected) {
+    if (gamepad.id.includes('0738') && gamepad.id.includes('2218') && !isGamepadConnected) {
         $('*[data-action="gamepad"][data-property="status"]').css('color', 'green');
 
         isGamepadConnected = true;
