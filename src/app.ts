@@ -171,7 +171,9 @@ disco.on('MagnetoCalibrationRequiredState', ({ required }) => {
 });
 
 disco.on('HomeTypeChanged', ({ type }) => {
-    localCache.lastHomeTypeStatus = type === 'TAKEOFF';
+    const isTakeOff: boolean = type === 'TAKEOFF';
+
+    localCache.lastHomeTypeStatus = isTakeOff;
 
     sendPacketToEveryone({
         action: 'check',
@@ -179,16 +181,28 @@ disco.on('HomeTypeChanged', ({ type }) => {
             lastHomeTypeStatus: localCache.lastHomeTypeStatus,
         },
     });
+
+    sendPacketToEveryone({
+        action: 'alert',
+        data: 'HomeTypeChanged got ' + type,
+    });
 });
 
 disco.on('HomeTypeChosenChanged', ({ type }) => {
-    localCache.lastRTHStatus = type === 'TAKEOFF';
+    const isTakeOff: boolean = type === 'TAKEOFF';
+
+    localCache.lastRTHStatus = isTakeOff;
 
     sendPacketToEveryone({
         action: 'check',
         data: {
             lastRTHStatus: localCache.lastRTHStatus,
         },
+    });
+
+    sendPacketToEveryone({
+        action: 'alert',
+        data: 'HomeTypeChosenChanged got ' + type,
     });
 });
 
@@ -331,6 +345,20 @@ disco.on('flyingState', ({ flyingState }) => {
     sendPacketToEveryone({
         action: 'flyingState',
         data: flyingState,
+    });
+});
+
+disco.on('HomeChanged', (data) => {
+    sendPacketToEveryone({
+        action: 'alert',
+        data: 'HomeChanged to ' + JSON.stringify(data),
+    });
+});
+
+disco.on('HomeTypeAvailabilityChanged', (data) => {
+    sendPacketToEveryone({
+        action: 'alert',
+        data: 'HomeTypeAvailabilityChanged to ' + JSON.stringify(data),
     });
 });
 

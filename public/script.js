@@ -368,6 +368,8 @@ function connect() {
                     if (pitch !== undefined) {
                         $('#dronePitch-current').val(pitch);
                     }
+                } else if (packet.action === 'alert') {
+                    console.info(packet.data);
                 }
             });
         }
