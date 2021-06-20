@@ -143,7 +143,9 @@ app.use(express.static(paths[Paths.PUBLIC]));
 
 let isFirstAuthorized = false;
 
-const io = require('socket.io')(server);
+const io = require('socket.io')(server, {
+    allowEIO3: true,
+});
 
 let clients = [];
 
