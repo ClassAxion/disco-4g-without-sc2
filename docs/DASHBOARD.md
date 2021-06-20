@@ -1,3 +1,14 @@
+# Home page
+
+-   title
+-   description
+-   input for username (optional)
+-   input for token with "apply" button
+-   view select (dashboard, only video and take off screen if token is valid)
+-   submit button
+
+# Dashboard
+
 ## On the top left
 
 -   Speed meter (only in one unit selected in settings, m/s or km/h)
