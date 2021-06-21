@@ -28,11 +28,13 @@ const lastSentCameraMovement = { tilt: null, pan: null };
 let lastAction = null;
 
 const gamepadLoop = () => {
-    const gamepads = navigator.getGamepads
+    const gamepadsRaw = navigator.getGamepads
         ? navigator.getGamepads()
         : navigator.webkitGetGamepads
         ? navigator.webkitGetGamepads
         : [];
+
+    const gamepads = Array.from(gamepadsRaw).filter(Boolean);
 
     if (!gamepads || gamepads.length === 0) return;
 
