@@ -4,6 +4,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import wrtc from 'wrtc';
 import fs from 'fs/promises';
 import { constants } from 'fs';
+import { json as parseJSON } from 'body-parser';
 
 import Peer from 'simple-peer';
 import ParrotDisco from 'parrot-disco-api';
@@ -14,6 +15,8 @@ import paths, { Paths } from './utils/paths';
 
 import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDiscoFlyingState.enum';
 
+import apiRoutes from './routes/apiRoutes';
+
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
 
 let disco: ParrotDisco = new ParrotDisco({
@@ -22,6 +25,8 @@ let disco: ParrotDisco = new ParrotDisco({
 });
 
 let isConnected: boolean = false;
+
+let takeOffAt = null;
 
 const localCache: {
     gpsFixed?: boolean;
@@ -104,6 +109,10 @@ const port: number = Number(process.env.PORT || '8000');
 const app: Application = express();
 
 const server: Server = app.listen(port, () => logger.info(`Server listening on ${port}`));
+
+app.use(parseJSON());
+
+app.use('/api', apiRoutes);
 
 app.get('/flightplans/:name', async (req, res) => {
     const { name } = req.params;
@@ -348,6 +357,16 @@ disco.on('flyingState', ({ flyingState }) => {
         action: 'flyingState',
         data: flyingState,
     });
+
+    sendPacketToEveryone({
+        action: 'state',
+        data: {
+            flyingState: localCache.flyingState,
+        },
+    });
+
+    if (flyingState === 1) takeOffAt = Date.now();
+    if (flyingState === 4) takeOffAt = null;
 });
 
 disco.on('HomeChanged', (data) => {
@@ -375,6 +394,13 @@ disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
         sendPacketToEveryone({
             action: 'canTakeOff',
             data: canTakeOff,
+        });
+
+        sendPacketToEveryone({
+            action: 'state',
+            data: {
+                canTakeOff: canTakeOff,
+            },
         });
     }
 });
@@ -422,6 +448,13 @@ let reconneting = false;
 disco.on('disconnected', async () => {
     isConnected = false;
 
+    sendPacketToEveryone({
+        action: 'state',
+        data: {
+            isDiscoConnected: false,
+        },
+    });
+
     if (!reconneting) {
         ffmpegProcess.kill();
 
@@ -437,6 +470,13 @@ disco.on('disconnected', async () => {
 
         if (isDiscovered) {
             isConnected = true;
+
+            sendPacketToEveryone({
+                action: 'state',
+                data: {
+                    isDiscoConnected: true,
+                },
+            });
 
             logger.info(`Disco discovered again!`);
 
@@ -487,7 +527,7 @@ io.on('connection', async (socket) => {
 
     socket.stream = stream;
 
-    socket.authorized = !isFirstAuthorized;
+    socket.authorized = false; //!isFirstAuthorized;
 
     isFirstAuthorized = true;
 
@@ -507,6 +547,8 @@ io.on('connection', async (socket) => {
 
     peer.on('data', (data) => {
         const packet = JSON.parse(data.toString());
+
+        //console.log(packet);
 
         if (socket.authorized && !startWithoutDisco) {
             if (packet.action && packet.action === 'camera-center') {
@@ -609,30 +651,74 @@ io.on('connection', async (socket) => {
         }
 
         if (packet.action === 'pong') {
-            peer.send(
-                JSON.stringify({
-                    action: 'latency',
-                    data: Date.now() - packet.data.time,
-                }),
-            );
+            try {
+                peer.send(
+                    JSON.stringify({
+                        action: 'latency',
+                        data: Date.now() - packet.data.time,
+                    }),
+                );
+
+                peer.send(
+                    JSON.stringify({
+                        action: 'state',
+                        data: {
+                            flyingTime: !takeOffAt ? 0 : Date.now() - takeOffAt,
+                        },
+                    }),
+                );
+            } catch {}
+        } else if (packet.action === 'init') {
+            const { token } = packet.data;
+
+            if (token === 'test') {
+                socket.authorized = true;
+
+                peer.send(
+                    JSON.stringify({
+                        action: 'permission',
+                        data: {
+                            isSuperUser: true,
+                            canPilotingPitch: true,
+                            canPilotingRoll: true,
+                            canMoveCamera: true,
+                            canUseAutonomy: true,
+                        },
+                    }),
+                );
+            }
         }
     });
 
     peer.on('connect', () => {
         pingInterval = setInterval(() => {
-            peer.send(
-                JSON.stringify({
-                    action: 'ping',
-                    data: {
-                        time: Date.now(),
-                    },
-                }),
-            );
+            try {
+                peer.send(
+                    JSON.stringify({
+                        action: 'ping',
+                        data: {
+                            time: Date.now(),
+                        },
+                    }),
+                );
+            } catch {}
         }, 1000);
 
         peer.addStream(stream);
 
         const initialPackets = [
+            {
+                action: 'init',
+            },
+            {
+                action: 'state',
+                data: {
+                    flyingTime: !takeOffAt ? 0 : Date.now() - takeOffAt,
+                    flyingState: localCache.flyingState,
+                    canTakeOff: localCache.canTakeOff,
+                    isDiscoConnected: isConnected,
+                },
+            },
             {
                 action: 'battery',
                 data: {
