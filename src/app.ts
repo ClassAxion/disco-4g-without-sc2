@@ -714,10 +714,34 @@ io.on('connection', async (socket) => {
                         disco.Piloting.returnToHome();
 
                         logger.info(`Returning to home`);
+
+                        try {
+                            peer.send(
+                                JSON.stringify({
+                                    action: 'alert',
+                                    data: {
+                                        level: 'info',
+                                        message: 'Returning to home',
+                                    },
+                                }),
+                            );
+                        } catch {}
                     } else {
                         disco.Piloting.stopReturnToHome();
 
                         logger.info(`Return to home cancelled`);
+
+                        try {
+                            peer.send(
+                                JSON.stringify({
+                                    action: 'alert',
+                                    data: {
+                                        level: 'warning',
+                                        message: 'Returning to home stopped',
+                                    },
+                                }),
+                            );
+                        } catch {}
                     }
                 }
             }
@@ -742,8 +766,32 @@ io.on('connection', async (socket) => {
                         disco.Mavlink.start(name + '.mavlink');
 
                         logger.info(`User start flight plan`);
+
+                        try {
+                            peer.send(
+                                JSON.stringify({
+                                    action: 'alert',
+                                    data: {
+                                        level: 'success',
+                                        message: 'Flight plan started',
+                                    },
+                                }),
+                            );
+                        } catch {}
                     } else {
                         logger.info(`Can't start flight plan`);
+
+                        try {
+                            peer.send(
+                                JSON.stringify({
+                                    action: 'alert',
+                                    data: {
+                                        level: 'danger',
+                                        message: 'Flight plan failed',
+                                    },
+                                }),
+                            );
+                        } catch {}
                     }
                 } else if (packet.action && packet.action === 'emergency') {
                     if (packet.data === 'landingFlightPlan') {
