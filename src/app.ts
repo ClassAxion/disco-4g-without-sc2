@@ -15,8 +15,6 @@ import paths, { Paths } from './utils/paths';
 
 import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDiscoFlyingState.enum';
 
-import apiRoutes from './routes/apiRoutes';
-
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
 
 let disco: ParrotDisco = new ParrotDisco({
@@ -114,7 +112,54 @@ app.use(parseJSON());
 
 let clients = [];
 
-app.use('/api', apiRoutes(clients));
+app.post('/api/token/check', (req, res) => {
+    const { token } = req.body;
+
+    const isValid: boolean = token === 'test';
+
+    if (isValid) {
+        res.status(200).json({ status: true });
+    } else {
+        res.status(400).json({ status: false });
+    }
+});
+
+app.get('/api/users', (_, res) => {
+    res.json(clients.map((client) => client.socket.id));
+});
+
+app.get('/api/user/:id/permissions', (req, res) => {
+    const socketId = req.params.id;
+
+    const client = clients.find((client) => client.socket.id === socketId);
+
+    if (!client) return res.sendStatus(404);
+
+    res.json(client.socket.permissions);
+});
+
+app.get('/api/user/:id/permission/:key/set/:value', (req, res) => {
+    const socketId = req.params.id;
+
+    const client = clients.find((client) => client.socket.id === socketId);
+
+    if (!client) return res.sendStatus(404);
+
+    const { key, value } = req.params;
+
+    client.socket.permissions[key] = Boolean(value);
+
+    client.peer.send(
+        JSON.stringify({
+            action: 'permission',
+            data: {
+                [key]: Boolean(value),
+            },
+        }),
+    );
+
+    res.json(client.socket.permissions);
+});
 
 app.get('/flightplans/:name', async (req, res) => {
     const { name } = req.params;
@@ -566,123 +611,125 @@ io.on('connection', async (socket) => {
 
         //console.log(packet);
 
-        if (socket.authorized || socket.permissions.canPilotingPitch || socket.permissions.canPilotingRoll) {
-            if (packet.action && packet.action === 'move') {
-                const { pitch, roll } = packet.data;
+        if (!startWithoutDisco) {
+            if (socket.authorized || socket.permissions.canPilotingPitch || socket.permissions.canPilotingRoll) {
+                if (packet.action && packet.action === 'move') {
+                    const { pitch, roll } = packet.data;
 
-                let isMoving = 0;
+                    let isMoving = 0;
 
-                if (pitch !== undefined) {
-                    if (pitch !== 0) {
-                        disco.pilotingData.pitch = validateAxis(pitch);
+                    if (pitch !== undefined) {
+                        if (pitch !== 0) {
+                            disco.pilotingData.pitch = validateAxis(pitch);
 
-                        isMoving = 1;
+                            isMoving = 1;
+                        }
                     }
-                }
 
-                if (roll !== undefined) {
-                    if (roll !== 0) {
-                        disco.pilotingData.roll = validateAxis(roll);
+                    if (roll !== undefined) {
+                        if (roll !== 0) {
+                            disco.pilotingData.roll = validateAxis(roll);
 
-                        isMoving = 1;
+                            isMoving = 1;
+                        }
                     }
-                }
 
-                if (isMoving === 0) {
-                    disco.pilotingData.pitch = 0;
-                    disco.pilotingData.roll = 0;
-                }
+                    if (isMoving === 0) {
+                        disco.pilotingData.pitch = 0;
+                        disco.pilotingData.roll = 0;
+                    }
 
-                disco.pilotingData.flag = isMoving;
+                    disco.pilotingData.flag = isMoving;
+                }
             }
-        }
 
-        if (socket.authorized || socket.permissions.canMoveCamera) {
-            if (packet.action && packet.action === 'camera-center') {
-                disco.Camera.moveTo(localCache.defaultCameraTilt, localCache.defaultCameraPan);
-            } else if (packet.action && packet.action === 'camera') {
-                if (packet.data.type === 'absolute') {
-                    disco.Camera.moveTo(packet.data.tilt, packet.data.pan);
-                } else if (packet.data.type === 'degrees') {
-                    disco.Camera.move(packet.data.tilt, packet.data.pan);
+            if (socket.authorized || socket.permissions.canMoveCamera) {
+                if (packet.action && packet.action === 'camera-center') {
+                    disco.Camera.moveTo(localCache.defaultCameraTilt, localCache.defaultCameraPan);
+                } else if (packet.action && packet.action === 'camera') {
+                    if (packet.data.type === 'absolute') {
+                        disco.Camera.moveTo(packet.data.tilt, packet.data.pan);
+                    } else if (packet.data.type === 'degrees') {
+                        disco.Camera.move(packet.data.tilt, packet.data.pan);
 
-                    const { tilt, pan } = packet.data;
+                        const { tilt, pan } = packet.data;
 
-                    sendPacketToEveryone(
-                        {
-                            action: 'camera',
-                            data: {
-                                currentSpeed: {
-                                    tilt,
-                                    pan,
+                        sendPacketToEveryone(
+                            {
+                                action: 'camera',
+                                data: {
+                                    currentSpeed: {
+                                        tilt,
+                                        pan,
+                                    },
                                 },
                             },
-                        },
-                        true,
-                    );
+                            true,
+                        );
+                    }
                 }
             }
-        }
 
-        if (socket.authorized || socket.permissions.canUseAutonomy) {
-            if (packet.action && packet.action === 'circle') {
-                if (packet.data === 'CCW' || packet.data === 'CW') {
-                    disco.Piloting.circle(packet.data);
+            if (socket.authorized || socket.permissions.canUseAutonomy) {
+                if (packet.action && packet.action === 'circle') {
+                    if (packet.data === 'CCW' || packet.data === 'CW') {
+                        disco.Piloting.circle(packet.data);
 
-                    logger.info(`Circling in direction: ${packet.data}`);
-                } else {
-                    logger.error(`Invalid circle direction: ${packet.data}`);
-                }
-            } else if (packet.action && packet.action === 'rth') {
-                if (packet.data) {
-                    disco.Piloting.returnToHome();
+                        logger.info(`Circling in direction: ${packet.data}`);
+                    } else {
+                        logger.error(`Invalid circle direction: ${packet.data}`);
+                    }
+                } else if (packet.action && packet.action === 'rth') {
+                    if (packet.data) {
+                        disco.Piloting.returnToHome();
 
-                    logger.info(`Returning to home`);
-                } else {
-                    disco.Piloting.stopReturnToHome();
+                        logger.info(`Returning to home`);
+                    } else {
+                        disco.Piloting.stopReturnToHome();
 
-                    logger.info(`Return to home cancelled`);
+                        logger.info(`Return to home cancelled`);
+                    }
                 }
             }
-        }
 
-        if (socket.authorized || socket.permissions.isSuperUser) {
-            if (packet.action && packet.action === 'takeOff') {
-                logger.info(`Got take off command`);
+            if (socket.authorized || socket.permissions.isSuperUser) {
+                if (packet.action && packet.action === 'takeOff') {
+                    logger.info(`Got take off command`);
 
-                if (localCache.canTakeOff) {
-                    disco.Piloting.userTakeOff();
+                    if (localCache.canTakeOff) {
+                        disco.Piloting.userTakeOff();
 
-                    logger.info(`User taking off`);
-                } else {
-                    logger.info(`Can't take off`);
+                        logger.info(`User taking off`);
+                    } else {
+                        logger.info(`Can't take off`);
+                    }
+                } else if (packet.action && packet.action === 'flightPlanStart') {
+                    logger.info(`Got flight plan start command`);
+
+                    const name = packet.data;
+
+                    if (localCache.canTakeOff || packet.force === true) {
+                        disco.Mavlink.start(name + '.mavlink');
+
+                        logger.info(`User start flight plan`);
+                    } else {
+                        logger.info(`Can't start flight plan`);
+                    }
+                } else if (packet.action && packet.action === 'emergency') {
+                    if (packet.data === 'landingFlightPlan') {
+                        disco.Mavlink.start('land.mavlink');
+
+                        logger.info(`Started landing flight plan`);
+                    }
+                } else if (packet.action && packet.action === 'test') {
+                    disco.GPSSettings.resetHome();
+
+                    disco.GPSSettings.setHomeLocation(53.34877, 17.64075, 50);
+
+                    disco.GPSSettings.sendControllerGPS(53.34877, 17.64075, 50, 2, 2);
+
+                    disco.GPSSettings.setHomeType(1);
                 }
-            } else if (packet.action && packet.action === 'flightPlanStart') {
-                logger.info(`Got flight plan start command`);
-
-                const name = packet.data;
-
-                if (localCache.canTakeOff || packet.force === true) {
-                    disco.Mavlink.start(name + '.mavlink');
-
-                    logger.info(`User start flight plan`);
-                } else {
-                    logger.info(`Can't start flight plan`);
-                }
-            } else if (packet.action && packet.action === 'emergency') {
-                if (packet.data === 'landingFlightPlan') {
-                    disco.Mavlink.start('land.mavlink');
-
-                    logger.info(`Started landing flight plan`);
-                }
-            } else if (packet.action && packet.action === 'test') {
-                disco.GPSSettings.resetHome();
-
-                disco.GPSSettings.setHomeLocation(53.34877, 17.64075, 50);
-
-                disco.GPSSettings.sendControllerGPS(53.34877, 17.64075, 50, 2, 2);
-
-                disco.GPSSettings.setHomeType(1);
             }
         }
 
