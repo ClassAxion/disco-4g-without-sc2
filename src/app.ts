@@ -224,6 +224,14 @@ disco.on('MagnetoCalibrationRequiredState', ({ required }) => {
             lastCalibrationStatus: localCache.lastCalibrationStatus,
         },
     });
+
+    sendPacketToEveryone({
+        action: 'alert',
+        data: {
+            level: 'danger',
+            message: 'Magneto need calibration',
+        },
+    });
 });
 
 disco.on('HomeTypeChanged', ({ type }) => {
@@ -509,6 +517,14 @@ disco.on('disconnected', async () => {
 
         logger.info(`Disco disconnected, reconnecting..`);
 
+        sendPacketToEveryone({
+            action: 'alert',
+            data: {
+                level: 'warning',
+                message: 'Disco disconnected, reconnecting..',
+            },
+        });
+
         reconneting = true;
 
         const isDiscovered: boolean = await disco.discover();
@@ -520,6 +536,14 @@ disco.on('disconnected', async () => {
                 action: 'state',
                 data: {
                     isDiscoConnected: true,
+                },
+            });
+
+            sendPacketToEveryone({
+                action: 'alert',
+                data: {
+                    level: 'success',
+                    message: 'Disco connected',
                 },
             });
 
@@ -543,15 +567,19 @@ disco.on('disconnected', async () => {
                 client.socket.stream = stream;
             }
         } else {
-            logger.info(`Disco not discover`);
+            logger.info(`Disco not discovered`);
+
+            sendPacketToEveryone({
+                action: 'alert',
+                data: {
+                    level: 'danger',
+                    message: 'Disco not discovered',
+                },
+            });
         }
 
         reconneting = false;
     }
-
-    sendPacketToEveryone({
-        action: 'disco-disconnected',
-    });
 
     //process.exit(1);
 });
@@ -771,6 +799,16 @@ io.on('connection', async (socket) => {
                     JSON.stringify({
                         action: 'permission',
                         data: permissions,
+                    }),
+                );
+
+                peer.send(
+                    JSON.stringify({
+                        action: 'alert',
+                        data: {
+                            level: 'success',
+                            message: 'You got authorized by token',
+                        },
                     }),
                 );
             }
