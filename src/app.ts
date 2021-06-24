@@ -272,6 +272,20 @@ disco.on('HomeTypeChosenChanged', ({ type }) => {
     });
 });
 
+disco.on('NavigateHomeStateChanged', (data) => {
+    sendPacketToEveryone({
+        action: 'alert',
+        data: 'NavigateHomeStateChanged got ' + JSON.stringify(data),
+    });
+});
+
+disco.on('AlertStateChanged', (data) => {
+    sendPacketToEveryone({
+        action: 'alert',
+        data: 'AlertStateChanged got ' + JSON.stringify(data),
+    });
+});
+
 disco.on('BatteryStateChanged', ({ percent }) => {
     sendPacketToEveryone({
         action: 'battery',
