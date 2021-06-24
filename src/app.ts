@@ -147,13 +147,15 @@ app.get('/api/user/:id/permission/:key/set/:value', (req, res) => {
 
     const { key, value } = req.params;
 
-    client.socket.permissions[key] = Boolean(value);
+    const isEnabled: boolean = value == '1';
+
+    client.socket.permissions[key] = isEnabled;
 
     client.peer.send(
         JSON.stringify({
             action: 'permission',
             data: {
-                [key]: Boolean(value),
+                [key]: isEnabled,
             },
         }),
     );
