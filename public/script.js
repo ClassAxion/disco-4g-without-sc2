@@ -14,6 +14,10 @@ function setCameraOrientation(x, y) {
     peer.send(JSON.stringify({ action: 'camera', data: { x, y } }));
 }
 
+function test() {
+    peer.send(JSON.stringify({ action: 'test' }));
+}
+
 $('#cameraTilt, #cameraPan').on('change', function () {
     const tilt = $('#cameraTilt').val();
     const pan = $('#cameraPan').val();
