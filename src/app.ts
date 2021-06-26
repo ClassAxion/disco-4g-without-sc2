@@ -246,6 +246,21 @@ disco.on('MagnetoCalibrationRequiredState', ({ required }) => {
     });
 });
 
+disco.on('MissonItemExecuted', ({ idx }) => {
+    sendPacketToEveryone({
+        action: 'alert',
+        data: 'MissonItemExecuted changed to ' + idx,
+    });
+
+    sendPacketToEveryone({
+        action: 'alert',
+        data: {
+            level: 'success',
+            message: 'Executed waypoint #' + idx,
+        },
+    });
+});
+
 disco.on('HomeTypeChanged', ({ type }) => {
     const isTakeOff: boolean = type === 'TAKEOFF';
 
