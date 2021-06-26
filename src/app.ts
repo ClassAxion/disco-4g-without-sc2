@@ -125,7 +125,15 @@ app.post('/api/token/check', (req, res) => {
 });
 
 app.get('/api/users', (_, res) => {
-    res.json(clients.map((client) => client.socket.id));
+    res.json(clients.map((client) => ({
+        id: client.socket.id,
+        ip: client.socket.handshake.address,
+        isSuperUser: client.socket.permissions.isSuperUser,
+        canPilotingPitch: client.socket.permissions.canPilotingPitch,
+        canPilotingRoll: client.socket.permissions.canPilotingRoll,
+        canMoveCamera: client.socket.permissions.canMoveCamera,
+        canUseAutonomy: client.socket.permissions.canUseAutonomy,
+    })));
 });
 
 app.get('/api/user/:id/permissions', (req, res) => {
