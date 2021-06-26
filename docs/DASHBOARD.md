@@ -106,8 +106,7 @@
 
 ### After click on Users button
 
--   Users list (id, location)
--   User permission (for pitch, roll, camera movement)
+-   Users table with columns: id, ip, can move camera, can piloting roll, can pilotin pitch, can use autonomous, is super user
 
 ### After click on Camera settings button
 
