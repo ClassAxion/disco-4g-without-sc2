@@ -125,15 +125,17 @@ app.post('/api/token/check', (req, res) => {
 });
 
 app.get('/api/users', (_, res) => {
-    res.json(clients.map((client) => ({
-        id: client.socket.id,
-        ip: client.socket.handshake.address,
-        isSuperUser: client.socket.permissions.isSuperUser,
-        canPilotingPitch: client.socket.permissions.canPilotingPitch,
-        canPilotingRoll: client.socket.permissions.canPilotingRoll,
-        canMoveCamera: client.socket.permissions.canMoveCamera,
-        canUseAutonomy: client.socket.permissions.canUseAutonomy,
-    })));
+    res.json(
+        clients.map((client) => ({
+            id: client.socket.id,
+            ip: client.socket.handshake.address,
+            isSuperUser: client.socket.permissions.isSuperUser,
+            canPilotingPitch: client.socket.permissions.canPilotingPitch,
+            canPilotingRoll: client.socket.permissions.canPilotingRoll,
+            canMoveCamera: client.socket.permissions.canMoveCamera,
+            canUseAutonomy: client.socket.permissions.canUseAutonomy,
+        })),
+    );
 });
 
 app.get('/api/user/:id/permissions', (req, res) => {
@@ -854,14 +856,36 @@ io.on('connection', async (socket) => {
         } else if (packet.action === 'init') {
             const { token } = packet.data;
 
-            if (token === 'test') {
-                const permissions = {
-                    isSuperUser: true,
-                    canPilotingPitch: true,
-                    canPilotingRoll: true,
-                    canMoveCamera: true,
-                    canUseAutonomy: true,
+            const isAuthorized = ['test', 'letsroll'].includes(token);
+
+            if (isAuthorized) {
+                let permissions = {
+                    isSuperUser: false,
+                    canPilotingPitch: false,
+                    canPilotingRoll: false,
+                    canMoveCamera: false,
+                    canUseAutonomy: false,
                 };
+
+                if (token === 'test') {
+                    permissions = {
+                        isSuperUser: true,
+                        canPilotingPitch: true,
+                        canPilotingRoll: true,
+                        canMoveCamera: true,
+                        canUseAutonomy: true,
+                    };
+                }
+
+                if (token === 'letsroll') {
+                    permissions = {
+                        isSuperUser: false,
+                        canPilotingPitch: false,
+                        canPilotingRoll: true,
+                        canMoveCamera: true,
+                        canUseAutonomy: false,
+                    };
+                }
 
                 socket.authorized = true;
 
