@@ -363,10 +363,37 @@ disco.on('MavlinkPlayErrorStateChanged', (data) => {
 
 disco.on('MavlinkFilePlayingStateChanged', (data) => {
     sendPacketToEveryone({
-        action: 'event',
-        eventId: 'MavlinkFilePlayingStateChanged',
-        data,
+        action: 'alert',
+        data: 'MavlinkFilePlayingStateChanged to ' + JSON.stringify(data),
     });
+
+    const { state } = data;
+
+    if (state === 'playing') {
+        sendPacketToEveryone({
+            action: 'alert',
+            data: {
+                level: 'success',
+                message: 'Flight plan start confirmed',
+            },
+        });
+    } else if (state === 'paused') {
+        sendPacketToEveryone({
+            action: 'alert',
+            data: {
+                level: 'info',
+                message: 'Flight plan paused',
+            },
+        });
+    } else if (state === 'stopped') {
+        sendPacketToEveryone({
+            action: 'alert',
+            data: {
+                level: 'info',
+                message: 'Flight plan stopped',
+            },
+        });
+    }
 });
 
 let lastSpeedPacket = 0;
