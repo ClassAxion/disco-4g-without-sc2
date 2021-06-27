@@ -255,13 +255,15 @@ disco.on('MagnetoCalibrationRequiredState', ({ required }) => {
         },
     });
 
-    sendPacketToEveryone({
-        action: 'alert',
-        data: {
-            level: 'danger',
-            message: 'Magneto need calibration',
-        },
-    });
+    if (required === 1) {
+        sendPacketToEveryone({
+            action: 'alert',
+            data: {
+                level: 'danger',
+                message: 'Magneto need calibration',
+            },
+        });
+    }
 });
 
 disco.on('MissonItemExecuted', ({ idx }) => {
