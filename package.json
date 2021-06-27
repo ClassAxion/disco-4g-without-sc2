@@ -26,6 +26,7 @@
     },
     "homepage": "https://github.com/ClassAxion/disco-4g-without-sc2#readme",
     "dependencies": {
+        "basic-ftp": "^4.6.6",
         "express": "^4.17.1",
         "fluent-ffmpeg": "^2.1.2",
         "node-bebop": "^0.6.0",

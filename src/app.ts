@@ -15,6 +15,8 @@ import paths, { Paths } from './utils/paths';
 
 import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDiscoFlyingState.enum';
 
+import FTP from './modules/FTP.module';
+
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
 
 let disco: ParrotDisco = new ParrotDisco({
@@ -77,6 +79,20 @@ const startStream = async () => {
 
     ffmpegProcess.run();
 };
+
+(async () => {
+    const ftp: FTP = new FTP();
+
+    await ftp.connect();
+
+    console.log(ftp.isConnected());
+
+    console.log(await ftp.list());
+
+    console.log(await ftp.download('flightPlan.mavlink', '../flightplans/flightPlan.mavlink'));
+
+    process.exit();
+})();
 
 if (!startWithoutDisco) {
     (async () => {
