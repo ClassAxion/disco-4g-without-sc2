@@ -80,6 +80,7 @@ const startStream = async () => {
     ffmpegProcess.run();
 };
 
+/*
 (async () => {
     const ftp: FTP = new FTP();
 
@@ -93,6 +94,7 @@ const startStream = async () => {
 
     process.exit();
 })();
+*/
 
 if (!startWithoutDisco) {
     (async () => {
