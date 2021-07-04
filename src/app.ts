@@ -16,6 +16,7 @@ import paths, { Paths } from './utils/paths';
 import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDiscoFlyingState.enum';
 
 import FTP from './modules/FTP.module';
+import ParrotDiscoMap from './modules/ParrotDiscoMap.module';
 
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
 
@@ -26,6 +27,8 @@ let disco: ParrotDisco = new ParrotDisco({
     streamVideoPort: Number(process.env.STREAM_CONTROL_PORT || '55004'),
     d2cPort: Number(process.env.D2C_PORT || '9988'),
 });
+
+const globalMap = !process.env.MAP ? null : new ParrotDiscoMap(process.env.MAP, logger, 'TEST');
 
 let isConnected: boolean = false;
 
@@ -410,6 +413,10 @@ disco.on('SpeedChanged', ({ speedX, speedY, speedZ }) => {
             data: speed,
         });
 
+        if (globalMap) {
+            globalMap.sendSpeed(speed);
+        }
+
         lastSpeedPacket = Date.now();
     }
 });
@@ -440,9 +447,16 @@ disco.on('AltitudeChanged', ({ altitude }) => {
             data: altitude,
         });
 
+        if (globalMap) {
+            globalMap.sendAltitude(altitude);
+        }
+
         lastAltitudePacket = Date.now();
     }
 });
+
+const variableMap = (value, inMin, inMax, outMin, outMax) =>
+    ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
 
 let lastAttitudePacket = 0;
 
@@ -460,6 +474,15 @@ disco.on('AttitudeChanged', ({ pitch, roll, yaw }) => {
                 roll: rollDegress,
             },
         });
+
+        if (globalMap) {
+            let angle = Number(variableMap(yawDegress, -180, 180, 0, 360).toFixed(0)) - 180;
+
+            if (angle > 360) angle -= 360;
+            if (angle < 0) angle = 360 - angle * -1;
+
+            globalMap.sendAngle(angle);
+        }
 
         lastAttitudePacket = Date.now();
     }
@@ -488,6 +511,10 @@ disco.on('PositionChanged', ({ latitude: lat, longitude: lon }) => {
                     },
                 },
             });
+
+            if (globalMap) {
+                globalMap.sendLocation(lat, lon);
+            }
 
             lastPositionPacket = Date.now();
         }
