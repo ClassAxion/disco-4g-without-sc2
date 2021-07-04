@@ -233,8 +233,6 @@ app.get('/flightplans/:name', async (req, res) => {
 
 app.use((_, res) => res.sendStatus(404));
 
-let isFirstAuthorized = false;
-
 const io = require('socket.io')(server, {
     allowEIO3: true,
 });
@@ -455,9 +453,6 @@ disco.on('AltitudeChanged', ({ altitude }) => {
     }
 });
 
-const variableMap = (value, inMin, inMax, outMin, outMax) =>
-    ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
-
 let lastAttitudePacket = 0;
 
 disco.on('AttitudeChanged', ({ pitch, roll, yaw }) => {
@@ -476,12 +471,7 @@ disco.on('AttitudeChanged', ({ pitch, roll, yaw }) => {
         });
 
         if (globalMap) {
-            let angle = Number(variableMap(yawDegress, -180, 180, 0, 360).toFixed(0)) - 180;
-
-            if (angle > 360) angle -= 360;
-            if (angle < 0) angle = 360 - angle * -1;
-
-            globalMap.sendAngle(angle);
+            globalMap.sendYaw(yaw);
         }
 
         lastAttitudePacket = Date.now();
@@ -718,7 +708,7 @@ io.on('connection', async (socket) => {
 
     socket.stream = stream;
 
-    socket.authorized = !process.env.NEW ? !isFirstAuthorized : false;
+    socket.authorized = false;
 
     socket.permissions = socket.authorized
         ? {
@@ -735,8 +725,6 @@ io.on('connection', async (socket) => {
               canMoveCamera: false,
               canUseAutonomy: false,
           };
-
-    isFirstAuthorized = true;
 
     if (videoOutput) stream.addTrack(videoOutput.track);
 

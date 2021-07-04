@@ -6,14 +6,12 @@ export default class ParrotDiscoMap {
 
     private isConnected: boolean = false;
 
-    constructor(path: string, private readonly logger: Logger, private readonly discoId: string) {
-        this.socket = io({
-            path,
-        });
+    constructor(private readonly url: string, private readonly logger: Logger, private readonly discoId: string) {
+        this.socket = io(this.url);
 
-        this.socket.on('disconnect', this.onDisconnect);
-        this.socket.on('connect', this.onConnect);
-        this.socket.on('reconnect', this.onConnect);
+        this.socket.on('disconnect', this.onDisconnect.bind(this));
+        this.socket.on('connect', this.onConnect.bind(this));
+        this.socket.on('reconnect', this.onConnect.bind(this));
     }
 
     private onConnect(): void {
@@ -42,10 +40,10 @@ export default class ParrotDiscoMap {
         this.socket.emit('altitude', { altitude });
     }
 
-    public sendAngle(angle: number): void {
+    public sendYaw(yaw: number): void {
         if (!this.isConnected) return;
 
-        this.socket.emit('angle', { angle });
+        this.socket.emit('yaw', { yaw });
     }
 
     public sendSpeed(speed: number): void {
