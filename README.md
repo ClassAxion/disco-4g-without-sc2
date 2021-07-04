@@ -44,6 +44,6 @@ I just want to have fun with Parrot Disco and I need something new :)
 -   :heavy_check_mark: Add the rest of the functionality under control (mainly stick control, the throttle is unnecessary at this stage)
 -   :heavy_check_mark: Make first manual test flight
 -   :heavy_check_mark: Connect some gamepad for better control
--   Make another manual flight to test gamepad
--   Create new dashboard for better view and arrangement
+-   :heavy_check_mark: Make another manual flight to test gamepad
+-   :heavy_check_mark: Create new dashboard for better view and arrangement
 -   TBA...
