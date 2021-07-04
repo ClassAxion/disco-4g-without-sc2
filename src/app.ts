@@ -228,7 +228,7 @@ app.get('/flightplans/:name', async (req, res) => {
     });
 });
 
-app.use(express.static(paths[Paths.PUBLIC]));
+app.use((_, res) => res.sendStatus(404));
 
 let isFirstAuthorized = false;
 
