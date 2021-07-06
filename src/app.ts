@@ -24,7 +24,7 @@ let disco: ParrotDisco = new ParrotDisco({
     debug: !!process.env.DEBUG,
     ip: process.env.DISCO_IP || '192.168.42.1',
     streamControlPort: Number(process.env.STREAM_CONTROL_PORT || '55005'),
-    streamVideoPort: Number(process.env.STREAM_CONTROL_PORT || '55004'),
+    streamVideoPort: Number(process.env.STREAM_VIDEO_PORT || '55004'),
     d2cPort: Number(process.env.D2C_PORT || '9988'),
 });
 
