@@ -471,7 +471,7 @@ disco.on('AttitudeChanged', ({ pitch, roll, yaw }) => {
         });
 
         if (globalMap) {
-            globalMap.sendYaw(yaw);
+            globalMap.sendYaw(yawDegress);
         }
 
         lastAttitudePacket = Date.now();
