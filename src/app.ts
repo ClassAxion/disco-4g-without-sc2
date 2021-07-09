@@ -747,7 +747,15 @@ io.on('connection', async (socket) => {
 
         if (!startWithoutDisco) {
             if (socket.authorized || socket.permissions.canPilotingPitch || socket.permissions.canPilotingRoll) {
-                if (packet.action && packet.action === 'move') {
+                if (packet.action && packet.action === 'circle') {
+                    if (packet.data === 'CCW' || packet.data === 'CW') {
+                        disco.Piloting.circle(packet.data);
+
+                        logger.info(`Circling in direction: ${packet.data}`);
+                    } else {
+                        logger.error(`Invalid circle direction: ${packet.data}`);
+                    }
+                } else if (packet.action && packet.action === 'move') {
                     const { pitch, roll } = packet.data;
 
                     let isMoving = 0;
@@ -805,15 +813,7 @@ io.on('connection', async (socket) => {
             }
 
             if (socket.authorized || socket.permissions.canUseAutonomy) {
-                if (packet.action && packet.action === 'circle') {
-                    if (packet.data === 'CCW' || packet.data === 'CW') {
-                        disco.Piloting.circle(packet.data);
-
-                        logger.info(`Circling in direction: ${packet.data}`);
-                    } else {
-                        logger.error(`Invalid circle direction: ${packet.data}`);
-                    }
-                } else if (packet.action && packet.action === 'rth') {
+                if (packet.action && packet.action === 'rth') {
                     if (packet.data) {
                         disco.Piloting.returnToHome();
 
