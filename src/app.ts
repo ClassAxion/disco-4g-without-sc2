@@ -272,6 +272,27 @@ disco.on('MagnetoCalibrationRequiredState', ({ required }) => {
     }
 });
 
+disco.on('VibrationLevelChanged', ({ state }) => {
+    sendPacketToEveryone({
+        action: 'alert',
+        data: 'VibrationLevelChanged changed to ' + state,
+    });
+});
+
+disco.on('AirSpeedChanged', ({ airSpeed }) => {
+    sendPacketToEveryone({
+        action: 'airspeed',
+        data: airSpeed,
+    });
+});
+
+disco.on('AltitudeAboveGroundChanged', ({ altitude }) => {
+    sendPacketToEveryone({
+        action: 'groundaltitude',
+        data: altitude,
+    });
+});
+
 disco.on('MissonItemExecuted', ({ idx }) => {
     sendPacketToEveryone({
         action: 'alert',
