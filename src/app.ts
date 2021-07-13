@@ -293,6 +293,16 @@ disco.on('AltitudeAboveGroundChanged', ({ altitude }) => {
     });
 });
 
+disco.on('moveToChanged', ({ status }) => {
+    sendPacketToEveryone({
+        action: 'alert',
+        data: {
+            level: 'success',
+            message: 'MoveTo got ' + status,
+        },
+    });
+});
+
 disco.on('MissonItemExecuted', ({ idx }) => {
     sendPacketToEveryone({
         action: 'alert',
@@ -890,21 +900,27 @@ io.on('connection', async (socket) => {
                     const name = packet.data;
 
                     if (localCache.canTakeOff || packet.force === true) {
-                        disco.Mavlink.start(name + '.mavlink');
+                        if (name === 'test') {
+                            logger.info(`Flight plan start TESTING`);
 
-                        logger.info(`User start flight plan`);
+                            disco.Piloting.moveTo(53.353077, 17.64584, 80);
+                        } else {
+                            disco.Mavlink.start(name + '.mavlink');
 
-                        try {
-                            peer.send(
-                                JSON.stringify({
-                                    action: 'alert',
-                                    data: {
-                                        level: 'success',
-                                        message: 'Flight plan started',
-                                    },
-                                }),
-                            );
-                        } catch {}
+                            logger.info(`User start flight plan`);
+
+                            try {
+                                peer.send(
+                                    JSON.stringify({
+                                        action: 'alert',
+                                        data: {
+                                            level: 'success',
+                                            message: 'Flight plan started',
+                                        },
+                                    }),
+                                );
+                            } catch {}
+                        }
                     } else {
                         logger.info(`Can't start flight plan`);
 
