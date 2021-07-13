@@ -28,7 +28,9 @@ let disco: ParrotDisco = new ParrotDisco({
     d2cPort: Number(process.env.D2C_PORT || '9988'),
 });
 
-const globalMap = !process.env.MAP ? null : new ParrotDiscoMap(process.env.MAP, logger, 'TEST');
+const discoId: string = process.env.DISCO_ID || Math.random().toString(36).slice(2);
+
+const globalMap = !process.env.MAP ? null : new ParrotDiscoMap(process.env.MAP, logger, discoId);
 
 let isConnected: boolean = false;
 
