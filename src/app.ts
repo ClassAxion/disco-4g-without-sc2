@@ -158,6 +158,7 @@ app.get('/api/users', (_, res) => {
             isSuperUser: client.socket.permissions.isSuperUser,
             canPilotingPitch: client.socket.permissions.canPilotingPitch,
             canPilotingRoll: client.socket.permissions.canPilotingRoll,
+            canPilotingThrottle: client.socket.permissions.canPilotingThrottle,
             canMoveCamera: client.socket.permissions.canMoveCamera,
             canUseAutonomy: client.socket.permissions.canUseAutonomy,
         })),
@@ -741,23 +742,14 @@ io.on('connection', async (socket) => {
 
     socket.stream = stream;
 
-    socket.authorized = false;
-
-    socket.permissions = socket.authorized
-        ? {
-              isSuperUser: true,
-              canPilotingPitch: true,
-              canPilotingRoll: true,
-              canMoveCamera: true,
-              canUseAutonomy: true,
-          }
-        : {
-              isSuperUser: false,
-              canPilotingPitch: false,
-              canPilotingRoll: false,
-              canMoveCamera: false,
-              canUseAutonomy: false,
-          };
+    socket.permissions = {
+        isSuperUser: false,
+        canPilotingPitch: false,
+        canPilotingRoll: false,
+        canPilotingThrottle: false,
+        canMoveCamera: false,
+        canUseAutonomy: false,
+    };
 
     if (videoOutput) stream.addTrack(videoOutput.track);
 
@@ -779,7 +771,11 @@ io.on('connection', async (socket) => {
         //console.log(packet);
 
         if (!startWithoutDisco) {
-            if (socket.authorized || socket.permissions.canPilotingPitch || socket.permissions.canPilotingRoll) {
+            if (
+                socket.permissions.canPilotingPitch ||
+                socket.permissions.canPilotingRoll ||
+                socket.permissions.canPilotingThrottle
+            ) {
                 if (packet.action && packet.action === 'circle') {
                     if (packet.data === 'CCW' || packet.data === 'CW') {
                         disco.Piloting.circle(packet.data);
@@ -789,7 +785,7 @@ io.on('connection', async (socket) => {
                         logger.error(`Invalid circle direction: ${packet.data}`);
                     }
                 } else if (packet.action && packet.action === 'move') {
-                    const { pitch, roll } = packet.data;
+                    const { pitch, roll, throttle } = packet.data;
 
                     let isMoving = 0;
 
@@ -809,16 +805,25 @@ io.on('connection', async (socket) => {
                         }
                     }
 
+                    if (throttle !== undefined) {
+                        if (throttle !== 0) {
+                            disco.pilotingData.gaz = validateAxis(throttle);
+
+                            isMoving = 1;
+                        }
+                    }
+
                     if (isMoving === 0) {
                         disco.pilotingData.pitch = 0;
                         disco.pilotingData.roll = 0;
+                        disco.pilotingData.gaz = 0;
                     }
 
                     disco.pilotingData.flag = isMoving;
                 }
             }
 
-            if (socket.authorized || socket.permissions.canMoveCamera) {
+            if (socket.permissions.canMoveCamera) {
                 if (packet.action && packet.action === 'camera-center') {
                     disco.Camera.moveTo(localCache.defaultCameraTilt, localCache.defaultCameraPan);
                 } else if (packet.action && packet.action === 'camera') {
@@ -845,7 +850,7 @@ io.on('connection', async (socket) => {
                 }
             }
 
-            if (socket.authorized || socket.permissions.canUseAutonomy) {
+            if (socket.permissions.canUseAutonomy) {
                 if (packet.action && packet.action === 'rth') {
                     if (packet.data) {
                         disco.Piloting.returnToHome();
@@ -883,7 +888,7 @@ io.on('connection', async (socket) => {
                 }
             }
 
-            if (socket.authorized || socket.permissions.isSuperUser) {
+            if (socket.permissions.isSuperUser) {
                 if (packet.action && packet.action === 'takeOff') {
                     logger.info(`Got take off command`);
 
@@ -982,6 +987,7 @@ io.on('connection', async (socket) => {
                     isSuperUser: false,
                     canPilotingPitch: false,
                     canPilotingRoll: false,
+                    canPilotingThrottle: false,
                     canMoveCamera: false,
                     canUseAutonomy: false,
                 };
@@ -991,6 +997,7 @@ io.on('connection', async (socket) => {
                         isSuperUser: true,
                         canPilotingPitch: true,
                         canPilotingRoll: true,
+                        canPilotingThrottle: true,
                         canMoveCamera: true,
                         canUseAutonomy: true,
                     };
@@ -1001,12 +1008,11 @@ io.on('connection', async (socket) => {
                         isSuperUser: false,
                         canPilotingPitch: false,
                         canPilotingRoll: true,
+                        canPilotingThrottle: false,
                         canMoveCamera: true,
                         canUseAutonomy: false,
                     };
                 }
-
-                socket.authorized = true;
 
                 socket.permissions = permissions;
 
@@ -1102,13 +1108,6 @@ io.on('connection', async (socket) => {
                 },
             },
         ];
-
-        if (socket.authorized) {
-            initialPackets.unshift({
-                action: 'authorize',
-                data: undefined,
-            });
-        }
 
         logger.debug(`New client connected, sending initial packets: ${JSON.stringify(initialPackets)}`);
 
