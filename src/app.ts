@@ -733,6 +733,13 @@ const validateAxis = (value: number): number => {
     return value;
 };
 
+const validateThrottle = (value: number): number => {
+    if (value > 100) return 100;
+    if (value < -100) return -100;
+
+    return value;
+};
+
 io.on('connection', async (socket) => {
     const address = socket.handshake.address;
 
@@ -807,7 +814,7 @@ io.on('connection', async (socket) => {
 
                     if (throttle !== undefined) {
                         if (throttle !== 0) {
-                            disco.pilotingData.gaz = validateAxis(throttle);
+                            disco.pilotingData.gaz = validateThrottle(throttle);
 
                             isMoving = 1;
                         }
