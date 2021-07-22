@@ -801,6 +801,8 @@ io.on('connection', async (socket) => {
                             disco.pilotingData.pitch = validateAxis(pitch);
 
                             isMoving = 1;
+                        } else {
+                            disco.pilotingData.pitch = 0;
                         }
                     }
 
@@ -809,6 +811,8 @@ io.on('connection', async (socket) => {
                             disco.pilotingData.roll = validateAxis(roll);
 
                             isMoving = 1;
+                        } else {
+                            disco.pilotingData.roll = 0;
                         }
                     }
 
@@ -817,6 +821,8 @@ io.on('connection', async (socket) => {
                             disco.pilotingData.gaz = validateThrottle(throttle);
 
                             isMoving = 1;
+                        } else {
+                            disco.pilotingData.gaz = 0;
                         }
                     }
 
