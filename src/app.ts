@@ -28,6 +28,15 @@ let disco: ParrotDisco = new ParrotDisco({
     d2cPort: Number(process.env.D2C_PORT || '9988'),
 });
 
+const streamQuality: string = ['480p', '720p'].includes(process.env.STREAM_QUALITY)
+    ? process.env.STREAM_QUALITY
+    : '480p';
+
+const streamQualities: { [key: string]: { width: number; height: number } } = {
+    '480p': { width: 856, height: 480 },
+    '720p': { width: 1280, height: 720 },
+};
+
 const discoId: string = process.env.DISCO_ID || Math.random().toString(36).slice(2);
 
 const globalMap = !process.env.MAP ? null : new ParrotDiscoMap(process.env.MAP, logger, discoId);
@@ -69,12 +78,12 @@ const localCache: {
 let videoOutput, ffmpegProcess;
 
 const startStream = async () => {
-    logger.info(`Starting video output to media stream..`);
+    logger.info(`Starting video output (${streamQuality}) to media stream..`);
 
     videoOutput = await require('wrtc-to-ffmpeg')(wrtc).output({
         kind: 'video',
-        width: 856,
-        height: 480,
+        width: streamQualities[streamQuality].width,
+        height: streamQualities[streamQuality].height,
     });
 
     ffmpegProcess = ffmpeg()
