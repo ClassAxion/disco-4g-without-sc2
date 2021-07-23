@@ -261,6 +261,46 @@ const sendPacketToEveryone = (packet, onlyUnAuthorized = false) => {
     }
 };
 
+disco.on('VideoStateChangedV2', ({ state }) => {
+    if (state === 'started') {
+        sendPacketToEveryone({
+            action: 'alert',
+            data: {
+                level: 'info',
+                message: 'Recording has been started (V2)',
+            },
+        });
+    } else if (state === 'stopped') {
+        sendPacketToEveryone({
+            action: 'alert',
+            data: {
+                level: 'info',
+                message: 'Recording has been stopped (V2)',
+            },
+        });
+    }
+});
+
+disco.on('VideoStateChanged', ({ state }) => {
+    if (state === 'started') {
+        sendPacketToEveryone({
+            action: 'alert',
+            data: {
+                level: 'info',
+                message: 'Recording has been started (V2)',
+            },
+        });
+    } else if (state === 'stopped') {
+        sendPacketToEveryone({
+            action: 'alert',
+            data: {
+                level: 'info',
+                message: 'Recording has been stopped (V2)',
+            },
+        });
+    }
+});
+
 disco.on('MagnetoCalibrationRequiredState', ({ required }) => {
     localCache.lastCalibrationStatus = required === 0;
 
@@ -1002,7 +1042,7 @@ io.on('connection', async (socket) => {
         } else if (packet.action === 'init') {
             const { token } = packet.data;
 
-            const isAuthorized = ['test', 'letsroll'].includes(token);
+            const isAuthorized = ['test', 'letsroll', 'letsroll2'].includes(token);
 
             if (isAuthorized) {
                 let permissions = {
@@ -1031,6 +1071,17 @@ io.on('connection', async (socket) => {
                         canPilotingPitch: false,
                         canPilotingRoll: true,
                         canPilotingThrottle: false,
+                        canMoveCamera: true,
+                        canUseAutonomy: false,
+                    };
+                }
+
+                if (token === 'letsroll2') {
+                    permissions = {
+                        isSuperUser: false,
+                        canPilotingPitch: false,
+                        canPilotingRoll: true,
+                        canPilotingThrottle: true,
                         canMoveCamera: true,
                         canUseAutonomy: false,
                     };
