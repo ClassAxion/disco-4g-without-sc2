@@ -1,3 +1,5 @@
+# Seazon closed. More changes comming in 2022 (mostly autonomous features).
+
 # WARNING! This project is experimental and you can damage your equipment!
 
 I'm not responsible for any damage caused by a software error. If you don't know how to use this project correctly, don't use it or you will lose your parrot!
