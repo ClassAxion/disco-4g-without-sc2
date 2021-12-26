@@ -72,3 +72,4 @@ I just want to have fun with Parrot Disco and I need something new :)
 -   Automatic base parameters setup on first connect
 -   Automatic checking for "landing" flightplan during first connect
 -   Add settings icon on top navbar, show modal with global settings on click 
+-   Reset input's on primary (controlling) pilot disconnect (reset pitch, roll, etc.)
