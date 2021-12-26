@@ -49,3 +49,26 @@ I just want to have fun with Parrot Disco and I need something new :)
 -   :heavy_check_mark: Make another manual flight to test gamepad
 -   :heavy_check_mark: Create new dashboard for better view and arrangement
 -   TBA...
+
+# TODO IN 2022
+-   Add icon on top navbar for camera settings, show modal with settings on click
+-   Automatic camera exposure relative to sun function
+-   Show modal on click on gamepad icon
+-   Add permissions icon on top navbar, show modal on click
+-   Set font with static width on navbar
+-   Add autonomous icon on top navbar, show modal on click
+-   Create view for VR (with some parameters overlay if possible)
+-   Connect SkyAware to show other planes with low AGL on the map (on dashboard and global map)
+-   Add table on global map to show parrots parameters
+-   Create disco auto following autonomous function
+-   Create camera automatic pointing to other disco 
+-   Implement "Click on map and fly to this point" function
+-   Create "no fly" zones (cities, etc)
+-   Create blackbox to save all parameters during flight (csv file with timestamp)
+-   Create software to read blackbox files
+-   Automatic circular landing cancelling on connection recovery
+-   Add flightplan icon on top navbar with flightplan modal on click
+-   Create flightplan controller for creating flightplans and running it
+-   Automatic base parameters setup on first connect
+-   Automatic checking for "landing" flightplan during first connect
+-   Add settings icon on top navbar, show modal with global settings on click 
