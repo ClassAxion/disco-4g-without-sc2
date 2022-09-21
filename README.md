@@ -1,4 +1,4 @@
-# Seazon closed. More changes comming in 2022 (mostly autonomous features).
+# Seazon closed. More changes comming in 2023 (mostly autonomous features).
 
 # WARNING! This project is experimental and you can damage your equipment!
 
@@ -50,7 +50,7 @@ I just want to have fun with Parrot Disco and I need something new :)
 -   :heavy_check_mark: Create new dashboard for better view and arrangement
 -   TBA...
 
-# TODO IN 2022
+# TODO IN 2023
 -   Add icon on top navbar for camera settings, show modal with settings on click
 -   Automatic camera exposure relative to sun function
 -   Show modal on click on gamepad icon
