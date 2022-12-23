@@ -17,8 +17,8 @@ import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDisco
 
 import FTP from './modules/FTP.module';
 import ParrotDiscoMap from './modules/ParrotDiscoMap.module';
-import { LocalCache } from './types/LocalCache.types';
 import Validation from './modules/Validation.module';
+import FlightCache from './modules/FlightCache.module';
 
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
 
@@ -47,12 +47,11 @@ let isConnected: boolean = false;
 
 let takeOffAt: number = -1;
 
-const localCache: LocalCache = {
+const localCache: FlightCache = new FlightCache({
     gpsFixed: false,
     altitude: 0,
     flyingState: ParrotDiscoFlyingState.LANDED,
     canTakeOff: false,
-    sensorStates: {},
     cameraMaxTiltSpeed: 0,
     cameraMaxPanSpeed: 0,
     defaultCameraTilt: 0,
@@ -61,7 +60,7 @@ const localCache: LocalCache = {
     lastHardwareStatus: true,
     lastHomeTypeStatus: false,
     lastRTHStatus: false,
-};
+});
 
 let videoOutput, ffmpegProcess;
 
@@ -290,12 +289,12 @@ disco.on('VideoStateChanged', ({ state }) => {
 });
 
 disco.on('MagnetoCalibrationRequiredState', ({ required }) => {
-    localCache.lastCalibrationStatus = required === 0;
+    localCache.set('lastCalibrationStatus', required === 0);
 
     sendPacketToEveryone({
         action: 'check',
         data: {
-            lastCalibrationStatus: localCache.lastCalibrationStatus,
+            lastCalibrationStatus: localCache.get('lastCalibrationStatus'),
         },
     });
 
@@ -359,12 +358,12 @@ disco.on('MissonItemExecuted', ({ idx }) => {
 disco.on('HomeTypeChanged', ({ type }) => {
     const isTakeOff: boolean = type === 'TAKEOFF';
 
-    localCache.lastHomeTypeStatus = isTakeOff;
+    localCache.set('lastHomeTypeStatus', isTakeOff);
 
     sendPacketToEveryone({
         action: 'check',
         data: {
-            lastHomeTypeStatus: localCache.lastHomeTypeStatus,
+            lastHomeTypeStatus: localCache.get('lastHomeTypeStatus'),
         },
     });
 
@@ -377,12 +376,12 @@ disco.on('HomeTypeChanged', ({ type }) => {
 disco.on('HomeTypeChosenChanged', ({ type }) => {
     const isTakeOff: boolean = type === 'TAKEOFF';
 
-    localCache.lastRTHStatus = isTakeOff;
+    localCache.set('lastRTHStatus', isTakeOff);
 
     sendPacketToEveryone({
         action: 'check',
         data: {
-            lastRTHStatus: localCache.lastRTHStatus,
+            lastRTHStatus: localCache.get('lastRTHStatus'),
         },
     });
 
@@ -418,7 +417,7 @@ disco.on('BatteryStateChanged', ({ percent }) => {
 disco.on('GPSFixStateChanged', ({ fixed }) => {
     const isFixed: boolean = fixed === 1;
 
-    localCache.gpsFixed = isFixed;
+    localCache.set('gpsFixed', isFixed);
 
     sendPacketToEveryone({
         action: 'gps',
@@ -491,24 +490,24 @@ disco.on('SpeedChanged', ({ speedX, speedY, speedZ }) => {
 });
 
 disco.on('SensorsStatesListChanged', ({ sensorName, sensorState }) => {
-    localCache.sensorStates[sensorName] = sensorState === 1;
-
     if (!sensorState) {
-        localCache.lastHardwareStatus = false;
+        localCache.set('lastHardwareStatus', false);
 
         sendPacketToEveryone({
             action: 'check',
             data: {
-                lastHardwareStatus: localCache.lastHardwareStatus,
+                lastHardwareStatus: localCache.get('lastHardwareStatus'),
             },
         });
+
+        logger.error(`Cannot take off due to sensor state - ${sensorName}`);
     }
 });
 
 let lastAltitudePacket = 0;
 
 disco.on('AltitudeChanged', ({ altitude }) => {
-    localCache.altitude = altitude;
+    localCache.set('altitude', altitude);
 
     if (!lastAltitudePacket || Date.now() - lastAltitudePacket > 1000) {
         sendPacketToEveryone({
@@ -583,7 +582,7 @@ disco.on('PositionChanged', ({ latitude: lat, longitude: lon }) => {
 });
 
 disco.on('flyingState', ({ flyingState }) => {
-    localCache.flyingState = flyingState;
+    localCache.set('flyingState', flyingState);
 
     sendPacketToEveryone({
         action: 'flyingState',
@@ -593,7 +592,7 @@ disco.on('flyingState', ({ flyingState }) => {
     sendPacketToEveryone({
         action: 'state',
         data: {
-            flyingState: localCache.flyingState,
+            flyingState: localCache.get('flyingState'),
         },
     });
 
@@ -618,10 +617,10 @@ disco.on('HomeTypeAvailabilityChanged', (data) => {
 disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
     const canTakeOff = AvailabilityState === 1;
 
-    if (Object.values(localCache.sensorStates).filter((sensor) => !sensor).length > 0) {
-        logger.error(`Can't take off! ${JSON.stringify(localCache.sensorStates)}`);
+    if (!localCache.get('lastHardwareStatus')) {
+        logger.error(`Can't take off!`);
     } else {
-        localCache.canTakeOff = canTakeOff;
+        localCache.set('canTakeOff', canTakeOff);
 
         sendPacketToEveryone({
             action: 'canTakeOff',
@@ -638,8 +637,8 @@ disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
 });
 
 disco.on('VelocityRange', ({ max_tilt: cameraMaxTiltSpeed, max_pan: cameraMaxPanSpeed }) => {
-    localCache.cameraMaxTiltSpeed = cameraMaxTiltSpeed;
-    localCache.cameraMaxPanSpeed = cameraMaxPanSpeed;
+    localCache.set('cameraMaxTiltSpeed', cameraMaxTiltSpeed);
+    localCache.set('cameraMaxPanSpeed', cameraMaxPanSpeed);
 
     sendPacketToEveryone({
         action: 'camera',
@@ -671,8 +670,8 @@ disco.on('Orientation', ({ tilt, pan }) => {
 });
 
 disco.on('defaultCameraOrientation', ({ tilt, pan }) => {
-    localCache.defaultCameraTilt = tilt;
-    localCache.defaultCameraPan = pan;
+    localCache.set('defaultCameraTilt', tilt);
+    localCache.set('defaultCameraPan', pan);
 });
 
 let reconneting = false;
@@ -863,7 +862,7 @@ io.on('connection', async (socket) => {
 
             if (socket.permissions.canMoveCamera) {
                 if (packet.action && packet.action === 'camera-center') {
-                    disco.Camera.moveTo(localCache.defaultCameraTilt, localCache.defaultCameraPan);
+                    disco.Camera.moveTo(localCache.get('defaultCameraTilt'), localCache.get('defaultCameraPan'));
                 } else if (packet.action && packet.action === 'camera') {
                     if (packet.data.type === 'absolute') {
                         disco.Camera.moveTo(packet.data.tilt, packet.data.pan);
@@ -930,7 +929,7 @@ io.on('connection', async (socket) => {
                 if (packet.action && packet.action === 'takeOff') {
                     logger.info(`Got take off command`);
 
-                    if (localCache.canTakeOff) {
+                    if (localCache.get('canTakeOff')) {
                         disco.Piloting.userTakeOff();
 
                         logger.info(`User taking off`);
@@ -942,7 +941,7 @@ io.on('connection', async (socket) => {
 
                     const name = packet.data;
 
-                    if (localCache.canTakeOff || packet.force === true) {
+                    if (localCache.get('canTakeOff') || packet.force === true) {
                         if (name === 'test') {
                             logger.info(`Flight plan start TESTING`);
 
@@ -1109,8 +1108,8 @@ io.on('connection', async (socket) => {
                 action: 'state',
                 data: {
                     flyingTime: takeOffAt < 0 ? 0 : Date.now() - takeOffAt,
-                    flyingState: localCache.flyingState,
-                    canTakeOff: localCache.canTakeOff,
+                    flyingState: localCache.get('flyingState'),
+                    canTakeOff: localCache.get('canTakeOff'),
                     isDiscoConnected: isConnected,
                 },
             },
@@ -1123,37 +1122,37 @@ io.on('connection', async (socket) => {
             {
                 action: 'gps',
                 data: {
-                    isFixed: localCache.gpsFixed,
+                    isFixed: localCache.get('gpsFixed'),
                 },
             },
             {
                 action: 'altitude',
-                data: localCache.altitude,
+                data: localCache.get('altitude'),
             },
             {
                 action: 'flyingState',
-                data: localCache.flyingState,
+                data: localCache.get('flyingState'),
             },
             {
                 action: 'canTakeOff',
-                data: localCache.canTakeOff,
+                data: localCache.get('canTakeOff'),
             },
             {
                 action: 'camera',
                 data: {
                     maxSpeed: {
-                        maxTiltSpeed: localCache.cameraMaxTiltSpeed,
-                        maxPanSpeed: localCache.cameraMaxPanSpeed,
+                        maxTiltSpeed: localCache.get('cameraMaxTiltSpeed'),
+                        maxPanSpeed: localCache.get('cameraMaxPanSpeed'),
                     },
                 },
             },
             {
                 action: 'check',
                 data: {
-                    lastRTHStatus: localCache.lastRTHStatus,
-                    lastHomeTypeStatus: localCache.lastHomeTypeStatus,
-                    lastCalibrationStatus: localCache.lastCalibrationStatus,
-                    lastHardwareStatus: localCache.lastHardwareStatus,
+                    lastRTHStatus: localCache.get('lastRTHStatus'),
+                    lastHomeTypeStatus: localCache.get('lastHomeTypeStatus'),
+                    lastCalibrationStatus: localCache.get('lastCalibrationStatus'),
+                    lastHardwareStatus: localCache.get('lastHardwareStatus'),
                 },
             },
         ];
