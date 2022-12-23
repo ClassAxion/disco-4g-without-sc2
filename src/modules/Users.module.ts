@@ -5,7 +5,7 @@ import { User } from '../interfaces/User.interface';
 export default class Users {
     private users: { [key: string]: User } = {};
 
-    public create(id: string, ip?: string): void {
+    public create(id: string, ip: string): void {
         this.users[id] = {
             id,
             ip,
@@ -21,8 +21,8 @@ export default class Users {
         this.users[id].ip = ip;
     }
 
-    public getIp(id: string): string {
-        return this.users[id].ip;
+    public getIp(id: string): string | undefined {
+        return this.users[id]?.ip;
     }
 
     public setPeer(id: string, peer: Peer): void {

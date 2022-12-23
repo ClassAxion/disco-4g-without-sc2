@@ -45,7 +45,7 @@ const globalMap = !process.env.MAP ? null : new ParrotDiscoMap(process.env.MAP, 
 
 let isConnected: boolean = false;
 
-let takeOffAt = null;
+let takeOffAt: number = -1;
 
 const localCache: LocalCache = {
     gpsFixed: false,
@@ -133,7 +133,7 @@ const server: Server = app.listen(port, () => logger.info(`Server listening on $
 
 app.use(parseJSON());
 
-let clients = [];
+let clients: any[] = [];
 
 app.post('/api/token/check', (req, res) => {
     const { token } = req.body;
@@ -598,7 +598,7 @@ disco.on('flyingState', ({ flyingState }) => {
     });
 
     if (flyingState === 1) takeOffAt = Date.now();
-    if (flyingState === 4) takeOffAt = null;
+    if (flyingState === 4) takeOffAt = -1;
 });
 
 disco.on('HomeChanged', (data) => {
@@ -1010,7 +1010,7 @@ io.on('connection', async (socket) => {
                     JSON.stringify({
                         action: 'state',
                         data: {
-                            flyingTime: !takeOffAt ? 0 : Date.now() - takeOffAt,
+                            flyingTime: takeOffAt < 0 ? 0 : Date.now() - takeOffAt,
                         },
                     }),
                 );
@@ -1108,7 +1108,7 @@ io.on('connection', async (socket) => {
             {
                 action: 'state',
                 data: {
-                    flyingTime: !takeOffAt ? 0 : Date.now() - takeOffAt,
+                    flyingTime: takeOffAt < 0 ? 0 : Date.now() - takeOffAt,
                     flyingState: localCache.flyingState,
                     canTakeOff: localCache.canTakeOff,
                     isDiscoConnected: isConnected,
