@@ -19,6 +19,7 @@ import FTP from './modules/FTP.module';
 import ParrotDiscoMap from './modules/ParrotDiscoMap.module';
 import Validation from './modules/Validation.module';
 import FlightCache from './modules/FlightCache.module';
+import FlightStream, { Resolution } from './modules/FlightStream.module';
 
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
 
@@ -34,7 +35,7 @@ const streamQuality: string = ['480p', '720p'].includes(process.env.STREAM_QUALI
     ? process.env.STREAM_QUALITY
     : '480p';
 
-const streamQualities: { [key: string]: { width: number; height: number } } = {
+const streamQualities: { [key: string]: Resolution } = {
     '480p': { width: 856, height: 480 },
     '720p': { width: 1280, height: 720 },
 };
@@ -62,27 +63,7 @@ const localCache: FlightCache = new FlightCache({
     lastRTHStatus: false,
 });
 
-let videoOutput, ffmpegProcess;
-
-const startStream = async () => {
-    logger.info(`Starting video output (${streamQuality}) to media stream..`);
-
-    videoOutput = await require('wrtc-to-ffmpeg')(wrtc).output({
-        kind: 'video',
-        width: streamQualities[streamQuality].width,
-        height: streamQualities[streamQuality].height,
-    });
-
-    ffmpegProcess = ffmpeg()
-        .input(paths[Paths.SDP])
-        .inputOption('-protocol_whitelist file,udp,rtp')
-        .output(videoOutput.url)
-        .outputOptions(videoOutput.options)
-        .on('start', (command) => logger.debug(`Video bridge started:`, command))
-        .on('error', (error) => logger.error(`Video bridge exited:`, error));
-
-    ffmpegProcess.run();
-};
+const flightStream: FlightStream = new FlightStream(logger, streamQualities[streamQuality]);
 
 /*
 (async () => {
@@ -118,7 +99,7 @@ if (!startWithoutDisco) {
 
         disco.MediaStreaming.enableVideoStream();
 
-        await startStream();
+        await flightStream.start();
     })();
 } else {
     logger.info(`Starting without disco`);
@@ -687,7 +668,7 @@ disco.on('disconnected', async () => {
     });
 
     if (!reconneting) {
-        ffmpegProcess.kill();
+        await flightStream.stop();
 
         for (const client of clients) {
             client.peer.removeStream(client.socket.stream);
@@ -733,11 +714,11 @@ disco.on('disconnected', async () => {
 
             logger.info(`Starting new video stream..`);
 
-            await startStream();
+            await flightStream.start();
 
             const stream = new wrtc.MediaStream();
 
-            stream.addTrack(videoOutput.track);
+            stream.addTrack(flightStream.getOutput().track);
 
             for (const client of clients) {
                 client.peer.addStream(stream);
@@ -780,7 +761,7 @@ io.on('connection', async (socket) => {
         canUseAutonomy: false,
     };
 
-    if (videoOutput) stream.addTrack(videoOutput.track);
+    if (flightStream.isRunning()) stream.addTrack(flightStream.getOutput().track);
 
     const peer = new Peer({ initiator: true, wrtc });
 

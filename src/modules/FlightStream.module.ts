@@ -4,14 +4,19 @@ import { Logger } from 'winston';
 
 import paths, { Paths } from '../utils/paths';
 
+export type Resolution = {
+    width: number;
+    height: number;
+};
+
 export default class FlightStream {
-    private resolution: { width: number; height: number };
+    private resolution: Resolution;
     private process: any;
     private output: any;
     private logger: Logger;
     private running: boolean;
 
-    constructor(logger: Logger, resulotion: { width: number; height: number } = { width: 856, height: 480 }) {
+    constructor(logger: Logger, resulotion: Resolution = { width: 856, height: 480 }) {
         this.logger = logger;
         this.resolution = resulotion;
     }
@@ -19,8 +24,8 @@ export default class FlightStream {
     public async start(): Promise<void> {
         this.output = await require('wrtc-to-ffmpeg')(wrtc).output({
             kind: 'video',
-            width: 856,
-            height: 480,
+            width: this.resolution.width,
+            height: this.resolution.height,
         });
 
         this.process = ffmpeg()
