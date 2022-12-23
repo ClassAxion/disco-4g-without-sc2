@@ -17,6 +17,7 @@ import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDisco
 
 import FTP from './modules/FTP.module';
 import ParrotDiscoMap from './modules/ParrotDiscoMap.module';
+import { LocalCache } from './types/LocalCache.types';
 
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
 
@@ -45,21 +46,7 @@ let isConnected: boolean = false;
 
 let takeOffAt = null;
 
-const localCache: {
-    gpsFixed?: boolean;
-    altitude?: number;
-    flyingState?: ParrotDiscoFlyingState;
-    canTakeOff?: boolean;
-    sensorStates?: { [key: string]: boolean };
-    cameraMaxTiltSpeed?: number;
-    cameraMaxPanSpeed?: number;
-    defaultCameraTilt?: number;
-    defaultCameraPan?: number;
-    lastCalibrationStatus?: boolean;
-    lastHardwareStatus?: boolean;
-    lastHomeTypeStatus?: boolean;
-    lastRTHStatus?: boolean;
-} = {
+const localCache: LocalCache = {
     gpsFixed: false,
     altitude: 0,
     flyingState: ParrotDiscoFlyingState.LANDED,
