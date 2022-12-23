@@ -18,6 +18,7 @@ import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDisco
 import FTP from './modules/FTP.module';
 import ParrotDiscoMap from './modules/ParrotDiscoMap.module';
 import { LocalCache } from './types/LocalCache.types';
+import Validation from './modules/Validation.module';
 
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
 
@@ -762,20 +763,6 @@ disco.on('disconnected', async () => {
     //process.exit(1);
 });
 
-const validateAxis = (value: number): number => {
-    if (value > 75) return 75;
-    if (value < -75) return -75;
-
-    return value;
-};
-
-const validateThrottle = (value: number): number => {
-    if (value > 100) return 100;
-    if (value < -100) return -100;
-
-    return value;
-};
-
 io.on('connection', async (socket) => {
     const address = socket.handshake.address;
 
@@ -820,8 +807,10 @@ io.on('connection', async (socket) => {
                 socket.permissions.canPilotingThrottle
             ) {
                 if (packet.action && packet.action === 'circle') {
-                    if (packet.data === 'CCW' || packet.data === 'CW') {
-                        disco.Piloting.circle(packet.data);
+                    if (Validation.isValidCircleDirection(packet.action)) {
+                        const direction = Validation.circleDirection(packet.action);
+
+                        disco.Piloting.circle(direction);
 
                         logger.info(`Circling in direction: ${packet.data}`);
                     } else {
@@ -834,7 +823,7 @@ io.on('connection', async (socket) => {
 
                     if (pitch !== undefined) {
                         if (pitch !== 0) {
-                            disco.pilotingData.pitch = validateAxis(pitch);
+                            disco.pilotingData.pitch = Validation.axis(pitch);
 
                             isMoving = 1;
                         } else {
@@ -844,7 +833,7 @@ io.on('connection', async (socket) => {
 
                     if (roll !== undefined) {
                         if (roll !== 0) {
-                            disco.pilotingData.roll = validateAxis(roll);
+                            disco.pilotingData.roll = Validation.axis(roll);
 
                             isMoving = 1;
                         } else {
@@ -854,7 +843,7 @@ io.on('connection', async (socket) => {
 
                     if (throttle !== undefined) {
                         if (throttle !== 0) {
-                            disco.pilotingData.gaz = validateThrottle(throttle);
+                            disco.pilotingData.gaz = Validation.axis(throttle);
 
                             isMoving = 1;
                         } else {

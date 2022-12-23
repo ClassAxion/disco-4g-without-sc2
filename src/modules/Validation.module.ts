@@ -6,6 +6,17 @@ export default class Validation {
         return value;
     }
 
+    public static throttle(value: number): number {
+        if (value > 100) return 100;
+        if (value < -100) return -100;
+
+        return value;
+    }
+
+    public static isValidCircleDirection(value: string): boolean {
+        return ['cw', 'ccw'].includes(value.toLocaleLowerCase());
+    }
+
     public static circleDirection(value: string): string {
         if (['cw', 'ccw'].includes(value.toLocaleLowerCase())) {
             return value.toUpperCase();
