@@ -1,16 +1,20 @@
 import ParrotDisco from 'parrot-disco-api';
+import { Logger } from 'winston';
 import FlightCache from './FlightCache.module';
+import ParrotDiscoMap from './ParrotDiscoMap.module';
 
 export default class FlightEvents {
-    private disco: ParrotDisco;
-    private sendPacketToEveryone: Function;
-    private localCache: FlightCache;
+    private lastSpeedPacket: number = 0;
+    private lastAltitudePacket: number = 0;
+    private lastAttitudePacket: number = 0;
 
-    constructor(disco: ParrotDisco, sendPacketToEveryone: Function, localCache: FlightCache) {
-        this.disco = disco;
-        this.sendPacketToEveryone = sendPacketToEveryone;
-        this.localCache = localCache;
-    }
+    constructor(
+        private readonly disco: ParrotDisco,
+        private readonly sendPacketToEveryone: Function,
+        private readonly localCache: FlightCache,
+        private readonly logger: Logger,
+        private readonly map: ParrotDiscoMap,
+    ) {}
 
     public createAlerts() {
         this.disco.on('VideoStateChangedV2', ({ state }) => {
@@ -206,6 +210,62 @@ export default class FlightEvents {
                 data: 'HomeTypeChanged got ' + type,
             });
         });
+
+        this.disco.on('SensorsStatesListChanged', ({ sensorName, sensorState }) => {
+            if (!sensorState) {
+                this.localCache.set('lastHardwareStatus', false);
+
+                this.sendPacketToEveryone({
+                    action: 'check',
+                    data: {
+                        lastHardwareStatus: this.localCache.get('lastHardwareStatus'),
+                    },
+                });
+
+                this.logger.error(`Cannot take off due to sensor state - ${sensorName}`);
+            }
+        });
+
+        this.disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
+            const canTakeOff = AvailabilityState === 1;
+
+            if (!this.localCache.get('lastHardwareStatus')) {
+                this.logger.error(`Can't take off!`);
+            } else {
+                this.localCache.set('canTakeOff', canTakeOff);
+
+                this.sendPacketToEveryone({
+                    action: 'canTakeOff',
+                    data: canTakeOff,
+                });
+
+                this.sendPacketToEveryone({
+                    action: 'state',
+                    data: {
+                        canTakeOff: canTakeOff,
+                    },
+                });
+            }
+        });
+
+        this.disco.on('flyingState', ({ flyingState }) => {
+            this.localCache.set('flyingState', flyingState);
+
+            this.sendPacketToEveryone({
+                action: 'flyingState',
+                data: flyingState,
+            });
+
+            this.sendPacketToEveryone({
+                action: 'state',
+                data: {
+                    flyingState: this.localCache.get('flyingState'),
+                },
+            });
+
+            if (flyingState === 1) this.localCache.set('takeOffAt', Date.now());
+            if (flyingState === 4) this.localCache.set('takeOffAt', -1);
+        });
     }
 
     public createTelemetry() {
@@ -260,6 +320,117 @@ export default class FlightEvents {
                 eventId: 'MavlinkPlayErrorStateChanged',
                 data,
             });
+        });
+
+        this.disco.on('SpeedChanged', ({ speedX, speedY, speedZ }) => {
+            const speed = Math.sqrt(Math.pow(speedX, 2) + Math.pow(speedY, 2) + Math.pow(speedZ, 2));
+
+            if (!this.lastSpeedPacket || Date.now() - this.lastSpeedPacket > 1000) {
+                this.sendPacketToEveryone({
+                    action: 'speed',
+                    data: speed,
+                });
+
+                this.map.sendSpeed(speed);
+
+                this.lastSpeedPacket = Date.now();
+            }
+        });
+
+        this.disco.on('AltitudeChanged', ({ altitude }) => {
+            this.localCache.set('altitude', altitude);
+
+            if (!this.lastAltitudePacket || Date.now() - this.lastAltitudePacket > 1000) {
+                this.sendPacketToEveryone({
+                    action: 'altitude',
+                    data: altitude,
+                });
+
+                this.map.sendAltitude(altitude);
+
+                this.lastAltitudePacket = Date.now();
+            }
+        });
+
+        this.disco.on('AttitudeChanged', ({ pitch, roll, yaw }) => {
+            if (!this.lastAttitudePacket || Date.now() - this.lastAttitudePacket > 1000) {
+                const yawDegress = yaw * (180 / Math.PI);
+                const pitchDegress = pitch * (180 / Math.PI);
+                const rollDegress = roll * (180 / Math.PI);
+
+                this.sendPacketToEveryone({
+                    action: 'attitude',
+                    data: {
+                        pitch: pitchDegress,
+                        yaw: yawDegress,
+                        roll: rollDegress,
+                    },
+                });
+
+                this.map.sendYaw(yawDegress);
+
+                this.lastAttitudePacket = Date.now();
+            }
+        });
+
+        let lastPositionPacket = 0;
+
+        this.disco.on('PositionChanged', ({ latitude: lat, longitude: lon }) => {
+            if (!lastPositionPacket || Date.now() - lastPositionPacket > 1000) {
+                if (lat !== 0 && lon !== 0) {
+                    this.sendPacketToEveryone({
+                        action: 'gps',
+                        data: {
+                            location: {
+                                lat,
+                                lon,
+                            },
+                        },
+                    });
+
+                    this.map.sendLocation(lat, lon);
+
+                    lastPositionPacket = Date.now();
+                }
+            }
+        });
+
+        this.disco.on('VelocityRange', ({ max_tilt: cameraMaxTiltSpeed, max_pan: cameraMaxPanSpeed }) => {
+            this.localCache.set('cameraMaxTiltSpeed', cameraMaxTiltSpeed);
+            this.localCache.set('cameraMaxPanSpeed', cameraMaxPanSpeed);
+
+            this.sendPacketToEveryone({
+                action: 'camera',
+                data: {
+                    maxSpeed: {
+                        maxTiltSpeed: cameraMaxTiltSpeed,
+                        maxPanSpeed: cameraMaxPanSpeed,
+                    },
+                },
+            });
+        });
+
+        let lastCameraOrientationPacket = 0;
+
+        this.disco.on('Orientation', ({ tilt, pan }) => {
+            if (!lastCameraOrientationPacket || Date.now() - lastCameraOrientationPacket > 1000) {
+                this.sendPacketToEveryone({
+                    action: 'camera',
+                    data: {
+                        orientation: {
+                            tilt,
+                            pan,
+                        },
+                    },
+                });
+
+                lastCameraOrientationPacket = Date.now();
+            }
+        });
+
+        this.disco.on('defaultCameraOrientation', ({ tilt, pan }) => {
+            this.localCache.set('defaultCameraTilt', tilt);
+            this.localCache.set('defaultCameraPan', pan);
         });
     }
 }

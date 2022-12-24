@@ -6,12 +6,19 @@ export default class ParrotDiscoMap {
 
     private isConnected: boolean = false;
 
-    constructor(private readonly url: string, private readonly logger: Logger, private readonly discoId: string) {
-        this.socket = io(this.url);
+    constructor(
+        private readonly url: string,
+        private readonly logger: Logger,
+        private readonly discoId: string,
+        private readonly enabled: boolean = true,
+    ) {
+        if (this.enabled) {
+            this.socket = io(this.url);
 
-        this.socket.on('disconnect', this.onDisconnect.bind(this));
-        this.socket.on('connect', this.onConnect.bind(this));
-        this.socket.on('reconnect', this.onConnect.bind(this));
+            this.socket.on('disconnect', this.onDisconnect.bind(this));
+            this.socket.on('connect', this.onConnect.bind(this));
+            this.socket.on('reconnect', this.onConnect.bind(this));
+        }
     }
 
     private onConnect(): void {

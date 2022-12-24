@@ -46,11 +46,9 @@ const streamQualities: { [key: string]: Resolution } = {
 
 const discoId: string = process.env.DISCO_ID || Math.random().toString(36).slice(2);
 
-const globalMap = !process.env.MAP ? null : new ParrotDiscoMap(process.env.MAP, logger, discoId);
+const globalMap = new ParrotDiscoMap(process.env.MAP, logger, discoId, !!process.env.MAP);
 
 let isConnected: boolean = false;
-
-let takeOffAt: number = -1;
 
 const localCache: FlightCache = new FlightCache({
     gpsFixed: false,
@@ -65,6 +63,7 @@ const localCache: FlightCache = new FlightCache({
     lastHardwareStatus: true,
     lastHomeTypeStatus: false,
     lastRTHStatus: false,
+    takeOffAt: -1,
 });
 
 const flightStream: FlightStream = new FlightStream(logger, streamQualities[streamQuality]);
@@ -235,192 +234,11 @@ const sendPacketToEveryone = (packet, onlyAuthorized = false) => {
     }
 };
 
-const flightEvents = new FlightEvents(disco, sendPacketToEveryone, localCache);
+const flightEvents = new FlightEvents(disco, sendPacketToEveryone, localCache, logger, globalMap);
 
 flightEvents.createAlerts();
 flightEvents.createChecks();
 flightEvents.createTelemetry();
-
-let lastSpeedPacket = 0;
-
-disco.on('SpeedChanged', ({ speedX, speedY, speedZ }) => {
-    const speed = Math.sqrt(Math.pow(speedX, 2) + Math.pow(speedY, 2) + Math.pow(speedZ, 2));
-
-    if (!lastSpeedPacket || Date.now() - lastSpeedPacket > 1000) {
-        sendPacketToEveryone({
-            action: 'speed',
-            data: speed,
-        });
-
-        if (globalMap) {
-            globalMap.sendSpeed(speed);
-        }
-
-        lastSpeedPacket = Date.now();
-    }
-});
-
-disco.on('SensorsStatesListChanged', ({ sensorName, sensorState }) => {
-    if (!sensorState) {
-        localCache.set('lastHardwareStatus', false);
-
-        sendPacketToEveryone({
-            action: 'check',
-            data: {
-                lastHardwareStatus: localCache.get('lastHardwareStatus'),
-            },
-        });
-
-        logger.error(`Cannot take off due to sensor state - ${sensorName}`);
-    }
-});
-
-let lastAltitudePacket = 0;
-
-disco.on('AltitudeChanged', ({ altitude }) => {
-    localCache.set('altitude', altitude);
-
-    if (!lastAltitudePacket || Date.now() - lastAltitudePacket > 1000) {
-        sendPacketToEveryone({
-            action: 'altitude',
-            data: altitude,
-        });
-
-        if (globalMap) {
-            globalMap.sendAltitude(altitude);
-        }
-
-        lastAltitudePacket = Date.now();
-    }
-});
-
-let lastAttitudePacket = 0;
-
-disco.on('AttitudeChanged', ({ pitch, roll, yaw }) => {
-    if (!lastAttitudePacket || Date.now() - lastAttitudePacket > 1000) {
-        const yawDegress = yaw * (180 / Math.PI);
-        const pitchDegress = pitch * (180 / Math.PI);
-        const rollDegress = roll * (180 / Math.PI);
-
-        sendPacketToEveryone({
-            action: 'attitude',
-            data: {
-                pitch: pitchDegress,
-                yaw: yawDegress,
-                roll: rollDegress,
-            },
-        });
-
-        if (globalMap) {
-            globalMap.sendYaw(yawDegress);
-        }
-
-        lastAttitudePacket = Date.now();
-    }
-});
-
-let lastPositionPacket = 0;
-
-disco.on('PositionChanged', ({ latitude: lat, longitude: lon }) => {
-    if (!lastPositionPacket || Date.now() - lastPositionPacket > 1000) {
-        if (lat !== 0 && lon !== 0) {
-            sendPacketToEveryone({
-                action: 'gps',
-                data: {
-                    location: {
-                        lat,
-                        lon,
-                    },
-                },
-            });
-
-            if (globalMap) {
-                globalMap.sendLocation(lat, lon);
-            }
-
-            lastPositionPacket = Date.now();
-        }
-    }
-});
-
-disco.on('flyingState', ({ flyingState }) => {
-    localCache.set('flyingState', flyingState);
-
-    sendPacketToEveryone({
-        action: 'flyingState',
-        data: flyingState,
-    });
-
-    sendPacketToEveryone({
-        action: 'state',
-        data: {
-            flyingState: localCache.get('flyingState'),
-        },
-    });
-
-    if (flyingState === 1) takeOffAt = Date.now();
-    if (flyingState === 4) takeOffAt = -1;
-});
-
-disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
-    const canTakeOff = AvailabilityState === 1;
-
-    if (!localCache.get('lastHardwareStatus')) {
-        logger.error(`Can't take off!`);
-    } else {
-        localCache.set('canTakeOff', canTakeOff);
-
-        sendPacketToEveryone({
-            action: 'canTakeOff',
-            data: canTakeOff,
-        });
-
-        sendPacketToEveryone({
-            action: 'state',
-            data: {
-                canTakeOff: canTakeOff,
-            },
-        });
-    }
-});
-
-disco.on('VelocityRange', ({ max_tilt: cameraMaxTiltSpeed, max_pan: cameraMaxPanSpeed }) => {
-    localCache.set('cameraMaxTiltSpeed', cameraMaxTiltSpeed);
-    localCache.set('cameraMaxPanSpeed', cameraMaxPanSpeed);
-
-    sendPacketToEveryone({
-        action: 'camera',
-        data: {
-            maxSpeed: {
-                maxTiltSpeed: cameraMaxTiltSpeed,
-                maxPanSpeed: cameraMaxPanSpeed,
-            },
-        },
-    });
-});
-
-let lastCameraOrientationPacket = 0;
-
-disco.on('Orientation', ({ tilt, pan }) => {
-    if (!lastCameraOrientationPacket || Date.now() - lastCameraOrientationPacket > 1000) {
-        sendPacketToEveryone({
-            action: 'camera',
-            data: {
-                orientation: {
-                    tilt,
-                    pan,
-                },
-            },
-        });
-
-        lastCameraOrientationPacket = Date.now();
-    }
-});
-
-disco.on('defaultCameraOrientation', ({ tilt, pan }) => {
-    localCache.set('defaultCameraTilt', tilt);
-    localCache.set('defaultCameraPan', pan);
-});
 
 let reconneting = false;
 
@@ -749,6 +567,8 @@ io.on('connection', async (socket) => {
                     }),
                 );
 
+                const takeOffAt: number = localCache.get('takeOffAt');
+
                 peer.send(
                     JSON.stringify({
                         action: 'state',
@@ -844,6 +664,8 @@ io.on('connection', async (socket) => {
         }, 1000);
 
         peer.addStream(stream);
+
+        const takeOffAt: number = localCache.get('takeOffAt');
 
         const initialPackets = [
             {
