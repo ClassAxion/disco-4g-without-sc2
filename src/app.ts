@@ -1,29 +1,18 @@
 import express, { Application } from 'express';
-import { join } from 'path';
-import ffmpeg from 'fluent-ffmpeg';
 import wrtc from 'wrtc';
-import fs from 'fs/promises';
-import { constants } from 'fs';
-import { json as parseJSON } from 'body-parser';
 import { Server as SocketServer } from 'socket.io';
-
 import Peer from 'simple-peer';
 import ParrotDisco from 'parrot-disco-api';
 import { Server } from 'http';
-
 import logger from './utils/logger';
-import paths, { Paths } from './utils/paths';
-
 import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDiscoFlyingState.enum';
-
-import FTP from './modules/FTP.module';
 import ParrotDiscoMap from './modules/ParrotDiscoMap.module';
 import Validation from './modules/Validation.module';
 import FlightCache from './modules/FlightCache.module';
 import FlightStream, { Resolution } from './modules/FlightStream.module';
 import Users from 'modules/Users.module';
-import { User } from 'interfaces/User.interface';
 import FlightEvents from 'modules/FlightEvents.module';
+import APIServer from 'modules/APIServer.module';
 
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
 
@@ -108,115 +97,16 @@ if (!startWithoutDisco) {
     logger.info(`Starting without disco`);
 }
 
+const clients = new Users();
+
 const port: number = Number(process.env.PORT || '8000');
 
 const app: Application = express();
 
 const server: Server = app.listen(port, () => logger.info(`Server listening on ${port}`));
 
-app.use(parseJSON());
-
-const clients = new Users();
-
-app.post('/api/token/check', (req, res) => {
-    const { token } = req.body;
-
-    const isValid: boolean = token === 'test';
-
-    if (isValid) {
-        res.status(200).json({ status: true });
-    } else {
-        res.status(400).json({ status: false });
-    }
-});
-
-app.get('/api/users', (_, res) => {
-    const users = clients.getUsers();
-
-    res.json(
-        Object.values(users).map((user: User) => ({
-            id: user.id,
-            ip: user.socket.handshake.address,
-            isSuperUser: user.permissions.isSuperUser,
-            canPilotingPitch: user.permissions.canPilotingPitch,
-            canPilotingRoll: user.permissions.canPilotingRoll,
-            canPilotingThrottle: user.permissions.canPilotingThrottle,
-            canMoveCamera: user.permissions.canMoveCamera,
-            canUseAutonomy: user.permissions.canUseAutonomy,
-        })),
-    );
-});
-
-app.get('/api/user/:id/permissions', (req, res) => {
-    const socketId = req.params.id;
-
-    const permissions = clients.getPermissions(socketId);
-
-    if (!permissions) return res.sendStatus(404);
-
-    res.json(permissions);
-});
-
-app.get('/api/user/:id/permission/:key/set/:value', (req, res) => {
-    const socketId = req.params.id;
-
-    if (!clients.exists(socketId)) return res.sendStatus(404);
-
-    const { key, value } = req.params;
-
-    const isEnabled: boolean = value == '1';
-
-    clients.setPermission(socketId, key, isEnabled);
-
-    const peer = clients.getPeer(socketId);
-
-    peer.send(
-        JSON.stringify({
-            action: 'permission',
-            data: {
-                [key]: isEnabled,
-            },
-        }),
-    );
-
-    res.json(clients.getPermissions(socketId));
-});
-
-app.get('/flightplans/:name', async (req, res) => {
-    const { name } = req.params;
-
-    const flightPlanName: string = name + '.mavlink';
-
-    const flightPlanPath: string = join(paths[Paths.FLIGHT_PLANS], flightPlanName);
-
-    try {
-        await fs.access(flightPlanPath, constants.F_OK);
-    } catch {
-        return res.sendStatus(404);
-    }
-
-    const file: string = await fs.readFile(flightPlanPath, 'utf-8');
-    const lines = file
-        .split(/\r?\n/g)
-        .slice(1)
-        .filter(Boolean)
-        .map((line) => line.split(/\t/g));
-
-    const waypoints = lines.map((o) => ({
-        index: Number(o[0]),
-        type: Number(o[3]),
-        lat: Number(o[8]),
-        lon: Number(o[9]),
-        alt: Number(o[10]),
-    }));
-
-    res.json({
-        name,
-        waypoints,
-    });
-});
-
-app.use((_, res) => res.sendStatus(404));
+const apiServer = new APIServer(app, clients);
+apiServer.init();
 
 const io = new SocketServer(server, {
     allowEIO3: true,
