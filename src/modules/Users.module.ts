@@ -5,11 +5,21 @@ import { User } from '../interfaces/User.interface';
 export default class Users {
     private users: { [key: string]: User } = {};
 
-    public create(id: string, ip: string): void {
+    public create(
+        id: string,
+        ip: string,
+        permissions: { [key: string]: boolean } = {},
+        peer?: Peer,
+        socket?: any,
+        stream?: any,
+    ): void {
         this.users[id] = {
             id,
             ip,
-            permissions: {},
+            permissions,
+            peer,
+            socket,
+            stream,
         };
     }
 
@@ -41,8 +51,16 @@ export default class Users {
         return this.users[id].socket;
     }
 
-    public getPermissions(id: string): { [key: string]: boolean } {
-        return this.users[id].permissions;
+    public setStream(id: string, stream: any): void {
+        this.users[id].stream = stream;
+    }
+
+    public getStream(id: string): any {
+        return this.users[id].stream;
+    }
+
+    public getPermissions(id: string): { [key: string]: boolean } | null {
+        return !this.users[id] ? null : this.users[id].permissions;
     }
 
     public getPermission(id: string, key: string): boolean {
@@ -51,5 +69,33 @@ export default class Users {
 
     public setPermission(id: string, key: string, value: boolean): void {
         this.users[id].permissions[key] = value;
+    }
+
+    public setPermissions(id: string, permissions: { [key: string]: boolean }): void {
+        this.users[id].permissions = permissions;
+    }
+
+    public getUsers() {
+        return this.users;
+    }
+
+    public getAuthorizedUsers() {
+        const users: { [key: string]: User } = {};
+
+        for (const id in this.users) {
+            if (this.users[id].socket?.authorized) {
+                users[id] = this.users[id];
+            }
+        }
+
+        return users;
+    }
+
+    public getUser(id: string): User {
+        return this.users[id];
+    }
+
+    public exists(id: string): boolean {
+        return !!this.users[id];
     }
 }

@@ -5,6 +5,7 @@ import wrtc from 'wrtc';
 import fs from 'fs/promises';
 import { constants } from 'fs';
 import { json as parseJSON } from 'body-parser';
+import { Server as SocketServer } from 'socket.io';
 
 import Peer from 'simple-peer';
 import ParrotDisco from 'parrot-disco-api';
@@ -20,6 +21,8 @@ import ParrotDiscoMap from './modules/ParrotDiscoMap.module';
 import Validation from './modules/Validation.module';
 import FlightCache from './modules/FlightCache.module';
 import FlightStream, { Resolution } from './modules/FlightStream.module';
+import Users from 'modules/Users.module';
+import { User } from 'interfaces/User.interface';
 
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
 
@@ -113,7 +116,7 @@ const server: Server = app.listen(port, () => logger.info(`Server listening on $
 
 app.use(parseJSON());
 
-let clients: any[] = [];
+const clients = new Users();
 
 app.post('/api/token/check', (req, res) => {
     const { token } = req.body;
@@ -128,16 +131,18 @@ app.post('/api/token/check', (req, res) => {
 });
 
 app.get('/api/users', (_, res) => {
+    const users = clients.getUsers();
+
     res.json(
-        clients.map((client) => ({
-            id: client.socket.id,
-            ip: client.socket.handshake.address,
-            isSuperUser: client.socket.permissions.isSuperUser,
-            canPilotingPitch: client.socket.permissions.canPilotingPitch,
-            canPilotingRoll: client.socket.permissions.canPilotingRoll,
-            canPilotingThrottle: client.socket.permissions.canPilotingThrottle,
-            canMoveCamera: client.socket.permissions.canMoveCamera,
-            canUseAutonomy: client.socket.permissions.canUseAutonomy,
+        Object.values(users).map((user: User) => ({
+            id: user.id,
+            ip: user.socket.handshake.address,
+            isSuperUser: user.permissions.isSuperUser,
+            canPilotingPitch: user.permissions.canPilotingPitch,
+            canPilotingRoll: user.permissions.canPilotingRoll,
+            canPilotingThrottle: user.permissions.canPilotingThrottle,
+            canMoveCamera: user.permissions.canMoveCamera,
+            canUseAutonomy: user.permissions.canUseAutonomy,
         })),
     );
 });
@@ -145,27 +150,27 @@ app.get('/api/users', (_, res) => {
 app.get('/api/user/:id/permissions', (req, res) => {
     const socketId = req.params.id;
 
-    const client = clients.find((client) => client.socket.id === socketId);
+    const permissions = clients.getPermissions(socketId);
 
-    if (!client) return res.sendStatus(404);
+    if (!permissions) return res.sendStatus(404);
 
-    res.json(client.socket.permissions);
+    res.json(permissions);
 });
 
 app.get('/api/user/:id/permission/:key/set/:value', (req, res) => {
     const socketId = req.params.id;
 
-    const client = clients.find((client) => client.socket.id === socketId);
-
-    if (!client) return res.sendStatus(404);
+    if (!clients.exists(socketId)) return res.sendStatus(404);
 
     const { key, value } = req.params;
 
     const isEnabled: boolean = value == '1';
 
-    client.socket.permissions[key] = isEnabled;
+    clients.setPermission(socketId, key, isEnabled);
 
-    client.peer.send(
+    const peer = clients.getPeer(socketId);
+
+    peer.send(
         JSON.stringify({
             action: 'permission',
             data: {
@@ -174,7 +179,7 @@ app.get('/api/user/:id/permission/:key/set/:value', (req, res) => {
         }),
     );
 
-    res.json(client.socket.permissions);
+    res.json(clients.getPermissions(socketId));
 });
 
 app.get('/flightplans/:name', async (req, res) => {
@@ -213,16 +218,16 @@ app.get('/flightplans/:name', async (req, res) => {
 
 app.use((_, res) => res.sendStatus(404));
 
-const io = require('socket.io')(server, {
+const io = new SocketServer(server, {
     allowEIO3: true,
 });
 
-const sendPacketToEveryone = (packet, onlyUnAuthorized = false) => {
+const sendPacketToEveryone = (packet, onlyAuthorized = false) => {
     logger.debug(`Sending packet to everyone: ${JSON.stringify(packet)}`);
 
-    const filteredClients = onlyUnAuthorized ? clients.filter((client) => client.socket.authorized) : clients;
+    const filteredClients = onlyAuthorized ? clients.getAuthorizedUsers() : clients.getUsers();
 
-    for (const client of filteredClients) {
+    for (const client of Object.values(filteredClients)) {
         try {
             client.peer.send(JSON.stringify(packet));
         } catch {}
@@ -670,8 +675,8 @@ disco.on('disconnected', async () => {
     if (!reconneting) {
         await flightStream.stop();
 
-        for (const client of clients) {
-            client.peer.removeStream(client.socket.stream);
+        for (const client of Object.values(clients.getUsers())) {
+            client.peer.removeStream(client.stream);
         }
 
         logger.info(`Disco disconnected, reconnecting..`);
@@ -720,10 +725,9 @@ disco.on('disconnected', async () => {
 
             stream.addTrack(flightStream.getOutput().track);
 
-            for (const client of clients) {
+            for (const client of Object.values(clients.getUsers())) {
                 client.peer.addStream(stream);
-
-                client.socket.stream = stream;
+                client.stream = stream;
             }
         } else {
             logger.info(`Disco not discovered`);
@@ -750,26 +754,25 @@ io.on('connection', async (socket) => {
 
     const stream = new wrtc.MediaStream();
 
-    socket.stream = stream;
-
-    socket.permissions = {
-        isSuperUser: false,
-        canPilotingPitch: false,
-        canPilotingRoll: false,
-        canPilotingThrottle: false,
-        canMoveCamera: false,
-        canUseAutonomy: false,
-    };
-
     if (flightStream.isRunning()) stream.addTrack(flightStream.getOutput().track);
 
     const peer = new Peer({ initiator: true, wrtc });
 
-    clients.push({
-        id: socket.id,
-        socket,
+    clients.create(
+        socket.id,
+        '',
+        {
+            isSuperUser: false,
+            canPilotingPitch: false,
+            canPilotingRoll: false,
+            canPilotingThrottle: false,
+            canMoveCamera: false,
+            canUseAutonomy: false,
+        },
         peer,
-    });
+        socket,
+        stream,
+    );
 
     let pingInterval;
 
@@ -780,12 +783,10 @@ io.on('connection', async (socket) => {
 
         //console.log(packet);
 
+        const permissions = clients.getPermissions(socket.id);
+
         if (!startWithoutDisco) {
-            if (
-                socket.permissions.canPilotingPitch ||
-                socket.permissions.canPilotingRoll ||
-                socket.permissions.canPilotingThrottle
-            ) {
+            if (permissions.canPilotingPitch || permissions.canPilotingRoll || permissions.canPilotingThrottle) {
                 if (packet.action && packet.action === 'circle') {
                     if (Validation.isValidCircleDirection(packet.action)) {
                         const direction = Validation.circleDirection(packet.action);
@@ -841,7 +842,7 @@ io.on('connection', async (socket) => {
                 }
             }
 
-            if (socket.permissions.canMoveCamera) {
+            if (permissions.canMoveCamera) {
                 if (packet.action && packet.action === 'camera-center') {
                     disco.Camera.moveTo(localCache.get('defaultCameraTilt'), localCache.get('defaultCameraPan'));
                 } else if (packet.action && packet.action === 'camera') {
@@ -868,7 +869,7 @@ io.on('connection', async (socket) => {
                 }
             }
 
-            if (socket.permissions.canUseAutonomy) {
+            if (permissions.canUseAutonomy) {
                 if (packet.action && packet.action === 'rth') {
                     if (packet.data) {
                         disco.Piloting.returnToHome();
@@ -906,7 +907,7 @@ io.on('connection', async (socket) => {
                 }
             }
 
-            if (socket.permissions.isSuperUser) {
+            if (permissions.isSuperUser) {
                 if (packet.action && packet.action === 'takeOff') {
                     logger.info(`Got take off command`);
 
@@ -1043,7 +1044,7 @@ io.on('connection', async (socket) => {
                     };
                 }
 
-                socket.permissions = permissions;
+                clients.setPermissions(socket.id, permissions);
 
                 peer.send(
                     JSON.stringify({
@@ -1145,8 +1146,6 @@ io.on('connection', async (socket) => {
         }
     });
 
-    socket.peer = peer;
-
     socket.on('signal', (data) => peer.signal(data));
 
     socket.on('disconnect', () => {
@@ -1156,6 +1155,6 @@ io.on('connection', async (socket) => {
 
         peer.destroy();
 
-        clients = clients.filter((o) => o.id !== socket.id);
+        clients.delete(socket.id);
     });
 });
