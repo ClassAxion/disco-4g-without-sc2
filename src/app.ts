@@ -1045,6 +1045,7 @@ io.on('connection', async (socket) => {
                 }
 
                 clients.setPermissions(socket.id, permissions);
+                clients.setAuthorized(socket.id, isAuthorized);
 
                 peer.send(
                     JSON.stringify({

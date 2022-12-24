@@ -12,6 +12,7 @@ export default class Users {
         peer?: Peer,
         socket?: any,
         stream?: any,
+        isAuthorized = false,
     ): void {
         this.users[id] = {
             id,
@@ -20,6 +21,7 @@ export default class Users {
             peer,
             socket,
             stream,
+            isAuthorized,
         };
     }
 
@@ -71,6 +73,10 @@ export default class Users {
         this.users[id].permissions[key] = value;
     }
 
+    public setAuthorized(id: string, value: boolean): void {
+        this.users[id].isAuthorized = value;
+    }
+
     public setPermissions(id: string, permissions: { [key: string]: boolean }): void {
         this.users[id].permissions = permissions;
     }
@@ -83,7 +89,7 @@ export default class Users {
         const users: { [key: string]: User } = {};
 
         for (const id in this.users) {
-            if (this.users[id].socket?.authorized) {
+            if (this.users[id].isAuthorized) {
                 users[id] = this.users[id];
             }
         }
