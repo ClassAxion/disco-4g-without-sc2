@@ -23,10 +23,11 @@ import FlightCache from './modules/FlightCache.module';
 import FlightStream, { Resolution } from './modules/FlightStream.module';
 import Users from 'modules/Users.module';
 import { User } from 'interfaces/User.interface';
+import FlightEvents from 'modules/FlightEvents.module';
 
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
 
-let disco: ParrotDisco = new ParrotDisco({
+const disco: ParrotDisco = new ParrotDisco({
     debug: !!process.env.DEBUG,
     ip: process.env.DISCO_IP || '192.168.42.1',
     streamControlPort: Number(process.env.STREAM_CONTROL_PORT || '55005'),
@@ -234,227 +235,11 @@ const sendPacketToEveryone = (packet, onlyAuthorized = false) => {
     }
 };
 
-disco.on('VideoStateChangedV2', ({ state }) => {
-    if (state === 'started') {
-        sendPacketToEveryone({
-            action: 'alert',
-            data: {
-                level: 'info',
-                message: 'Recording has been started (V2)',
-            },
-        });
-    } else if (state === 'stopped') {
-        sendPacketToEveryone({
-            action: 'alert',
-            data: {
-                level: 'info',
-                message: 'Recording has been stopped (V2)',
-            },
-        });
-    }
-});
+const flightEvents = new FlightEvents(disco, sendPacketToEveryone, localCache);
 
-disco.on('VideoStateChanged', ({ state }) => {
-    if (state === 'started') {
-        sendPacketToEveryone({
-            action: 'alert',
-            data: {
-                level: 'info',
-                message: 'Recording has been started (V2)',
-            },
-        });
-    } else if (state === 'stopped') {
-        sendPacketToEveryone({
-            action: 'alert',
-            data: {
-                level: 'info',
-                message: 'Recording has been stopped (V2)',
-            },
-        });
-    }
-});
-
-disco.on('MagnetoCalibrationRequiredState', ({ required }) => {
-    localCache.set('lastCalibrationStatus', required === 0);
-
-    sendPacketToEveryone({
-        action: 'check',
-        data: {
-            lastCalibrationStatus: localCache.get('lastCalibrationStatus'),
-        },
-    });
-
-    if (required === 1) {
-        sendPacketToEveryone({
-            action: 'alert',
-            data: {
-                level: 'danger',
-                message: 'Magneto need calibration',
-            },
-        });
-    }
-});
-
-disco.on('VibrationLevelChanged', ({ state }) => {
-    sendPacketToEveryone({
-        action: 'alert',
-        data: 'VibrationLevelChanged changed to ' + state,
-    });
-});
-
-disco.on('AirSpeedChanged', ({ airSpeed }) => {
-    sendPacketToEveryone({
-        action: 'airspeed',
-        data: airSpeed,
-    });
-});
-
-disco.on('AltitudeAboveGroundChanged', ({ altitude }) => {
-    sendPacketToEveryone({
-        action: 'groundaltitude',
-        data: altitude,
-    });
-});
-
-disco.on('moveToChanged', ({ status }) => {
-    sendPacketToEveryone({
-        action: 'alert',
-        data: {
-            level: 'success',
-            message: 'MoveTo got ' + status,
-        },
-    });
-});
-
-disco.on('MissonItemExecuted', ({ idx }) => {
-    sendPacketToEveryone({
-        action: 'alert',
-        data: 'MissonItemExecuted changed to ' + idx,
-    });
-
-    sendPacketToEveryone({
-        action: 'alert',
-        data: {
-            level: 'success',
-            message: 'Executed waypoint #' + idx,
-        },
-    });
-});
-
-disco.on('HomeTypeChanged', ({ type }) => {
-    const isTakeOff: boolean = type === 'TAKEOFF';
-
-    localCache.set('lastHomeTypeStatus', isTakeOff);
-
-    sendPacketToEveryone({
-        action: 'check',
-        data: {
-            lastHomeTypeStatus: localCache.get('lastHomeTypeStatus'),
-        },
-    });
-
-    sendPacketToEveryone({
-        action: 'alert',
-        data: 'HomeTypeChanged got ' + type,
-    });
-});
-
-disco.on('HomeTypeChosenChanged', ({ type }) => {
-    const isTakeOff: boolean = type === 'TAKEOFF';
-
-    localCache.set('lastRTHStatus', isTakeOff);
-
-    sendPacketToEveryone({
-        action: 'check',
-        data: {
-            lastRTHStatus: localCache.get('lastRTHStatus'),
-        },
-    });
-
-    sendPacketToEveryone({
-        action: 'alert',
-        data: 'HomeTypeChosenChanged got ' + type,
-    });
-});
-
-disco.on('NavigateHomeStateChanged', (data) => {
-    sendPacketToEveryone({
-        action: 'alert',
-        data: 'NavigateHomeStateChanged got ' + JSON.stringify(data),
-    });
-});
-
-disco.on('AlertStateChanged', (data) => {
-    sendPacketToEveryone({
-        action: 'alert',
-        data: 'AlertStateChanged got ' + JSON.stringify(data),
-    });
-});
-
-disco.on('BatteryStateChanged', ({ percent }) => {
-    sendPacketToEveryone({
-        action: 'battery',
-        data: {
-            percent,
-        },
-    });
-});
-
-disco.on('GPSFixStateChanged', ({ fixed }) => {
-    const isFixed: boolean = fixed === 1;
-
-    localCache.set('gpsFixed', isFixed);
-
-    sendPacketToEveryone({
-        action: 'gps',
-        data: {
-            isFixed,
-        },
-    });
-});
-
-disco.on('MavlinkPlayErrorStateChanged', (data) => {
-    sendPacketToEveryone({
-        action: 'event',
-        eventId: 'MavlinkPlayErrorStateChanged',
-        data,
-    });
-});
-
-disco.on('MavlinkFilePlayingStateChanged', (data) => {
-    sendPacketToEveryone({
-        action: 'alert',
-        data: 'MavlinkFilePlayingStateChanged to ' + JSON.stringify(data),
-    });
-
-    const { state } = data;
-
-    if (state === 'playing') {
-        sendPacketToEveryone({
-            action: 'alert',
-            data: {
-                level: 'success',
-                message: 'Flight plan start confirmed',
-            },
-        });
-    } else if (state === 'paused') {
-        sendPacketToEveryone({
-            action: 'alert',
-            data: {
-                level: 'info',
-                message: 'Flight plan paused',
-            },
-        });
-    } else if (state === 'stopped') {
-        sendPacketToEveryone({
-            action: 'alert',
-            data: {
-                level: 'info',
-                message: 'Flight plan stopped',
-            },
-        });
-    }
-});
+flightEvents.createAlerts();
+flightEvents.createChecks();
+flightEvents.createTelemetry();
 
 let lastSpeedPacket = 0;
 
@@ -534,15 +319,6 @@ disco.on('AttitudeChanged', ({ pitch, roll, yaw }) => {
     }
 });
 
-disco.on('NumberOfSatelliteChanged', ({ numberOfSatellite: satellites }) => {
-    sendPacketToEveryone({
-        action: 'gps',
-        data: {
-            satellites,
-        },
-    });
-});
-
 let lastPositionPacket = 0;
 
 disco.on('PositionChanged', ({ latitude: lat, longitude: lon }) => {
@@ -584,20 +360,6 @@ disco.on('flyingState', ({ flyingState }) => {
 
     if (flyingState === 1) takeOffAt = Date.now();
     if (flyingState === 4) takeOffAt = -1;
-});
-
-disco.on('HomeChanged', (data) => {
-    sendPacketToEveryone({
-        action: 'alert',
-        data: 'HomeChanged to ' + JSON.stringify(data),
-    });
-});
-
-disco.on('HomeTypeAvailabilityChanged', (data) => {
-    sendPacketToEveryone({
-        action: 'alert',
-        data: 'HomeTypeAvailabilityChanged to ' + JSON.stringify(data),
-    });
 });
 
 disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
