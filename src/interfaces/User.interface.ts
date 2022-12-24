@@ -5,5 +5,6 @@ export interface User {
     ip: string;
     peer?: Peer;
     socket?: any;
+    stream?: any;
     permissions: { [key: string]: boolean };
 }
