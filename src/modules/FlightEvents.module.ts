@@ -16,140 +16,71 @@ export default class FlightEvents {
         private readonly map: ParrotDiscoMap,
     ) {}
 
+    public alert(message: string, level: string = undefined) {
+        this.sendPacketToEveryone({
+            action: 'alert',
+            data: {
+                message,
+                level,
+            },
+        });
+    }
+
     public createAlerts() {
         this.disco.on('VideoStateChangedV2', ({ state }) => {
             if (state === 'started') {
-                this.sendPacketToEveryone({
-                    action: 'alert',
-                    data: {
-                        level: 'info',
-                        message: 'Recording has been started (V2)',
-                    },
-                });
+                this.alert('Recording has been started (V2)', 'info');
             } else if (state === 'stopped') {
-                this.sendPacketToEveryone({
-                    action: 'alert',
-                    data: {
-                        level: 'info',
-                        message: 'Recording has been stopped (V2)',
-                    },
-                });
+                this.alert('Recording has been stopped (V2)', 'info');
             }
         });
 
         this.disco.on('VideoStateChanged', ({ state }) => {
             if (state === 'started') {
-                this.sendPacketToEveryone({
-                    action: 'alert',
-                    data: {
-                        level: 'info',
-                        message: 'Recording has been started (V2)',
-                    },
-                });
+                this.alert('Recording has been started', 'info');
             } else if (state === 'stopped') {
-                this.sendPacketToEveryone({
-                    action: 'alert',
-                    data: {
-                        level: 'info',
-                        message: 'Recording has been stopped (V2)',
-                    },
-                });
+                this.alert('Recording has been stopped', 'info');
             }
         });
 
         this.disco.on('VibrationLevelChanged', ({ state }) => {
-            this.sendPacketToEveryone({
-                action: 'alert',
-                data: 'VibrationLevelChanged changed to ' + state,
-            });
+            this.alert(`VibrationLevelChanged changed to ${state}`);
         });
 
         this.disco.on('moveToChanged', ({ status }) => {
-            this.sendPacketToEveryone({
-                action: 'alert',
-                data: {
-                    level: 'success',
-                    message: 'MoveTo got ' + status,
-                },
-            });
+            this.alert(`MoveTo got ${status}`, 'success');
         });
 
         this.disco.on('MissonItemExecuted', ({ idx }) => {
-            this.sendPacketToEveryone({
-                action: 'alert',
-                data: 'MissonItemExecuted changed to ' + idx,
-            });
-
-            this.sendPacketToEveryone({
-                action: 'alert',
-                data: {
-                    level: 'success',
-                    message: 'Executed waypoint #' + idx,
-                },
-            });
+            this.alert(`Executed waypoint #${idx}`, 'success');
         });
 
         this.disco.on('NavigateHomeStateChanged', (data) => {
-            this.sendPacketToEveryone({
-                action: 'alert',
-                data: 'NavigateHomeStateChanged got ' + JSON.stringify(data),
-            });
+            this.alert(`NavigateHomeStateChanged got ${JSON.stringify(data)}`);
         });
 
         this.disco.on('AlertStateChanged', (data) => {
-            this.sendPacketToEveryone({
-                action: 'alert',
-                data: 'AlertStateChanged got ' + JSON.stringify(data),
-            });
+            this.alert(`AlertStateChanged got ${JSON.stringify(data)}`);
         });
 
         this.disco.on('MavlinkFilePlayingStateChanged', (data) => {
-            this.sendPacketToEveryone({
-                action: 'alert',
-                data: 'MavlinkFilePlayingStateChanged to ' + JSON.stringify(data),
-            });
-
             const { state } = data;
 
             if (state === 'playing') {
-                this.sendPacketToEveryone({
-                    action: 'alert',
-                    data: {
-                        level: 'success',
-                        message: 'Flight plan start confirmed',
-                    },
-                });
+                this.alert('Flight plan start confirmed', 'success');
             } else if (state === 'paused') {
-                this.sendPacketToEveryone({
-                    action: 'alert',
-                    data: {
-                        level: 'info',
-                        message: 'Flight plan paused',
-                    },
-                });
+                this.alert('Flight plan paused', 'info');
             } else if (state === 'stopped') {
-                this.sendPacketToEveryone({
-                    action: 'alert',
-                    data: {
-                        level: 'info',
-                        message: 'Flight plan stopped',
-                    },
-                });
+                this.alert('Flight plan stopped', 'info');
             }
         });
 
         this.disco.on('HomeChanged', (data) => {
-            this.sendPacketToEveryone({
-                action: 'alert',
-                data: 'HomeChanged to ' + JSON.stringify(data),
-            });
+            this.alert(`HomeChanged to ${JSON.stringify(data)}`);
         });
 
         this.disco.on('HomeTypeAvailabilityChanged', (data) => {
-            this.sendPacketToEveryone({
-                action: 'alert',
-                data: 'HomeTypeAvailabilityChanged to ' + JSON.stringify(data),
-            });
+            this.alert(`HomeTypeAvailabilityChanged to ${JSON.stringify(data)}`);
         });
     }
 
@@ -165,13 +96,7 @@ export default class FlightEvents {
             });
 
             if (required === 1) {
-                this.sendPacketToEveryone({
-                    action: 'alert',
-                    data: {
-                        level: 'danger',
-                        message: 'Magneto need calibration',
-                    },
-                });
+                this.alert('Magneto need calibration', 'danger');
             }
         });
 
@@ -187,10 +112,7 @@ export default class FlightEvents {
                 },
             });
 
-            this.sendPacketToEveryone({
-                action: 'alert',
-                data: 'HomeTypeChosenChanged got ' + type,
-            });
+            this.alert(`HomeTypeChosenChanged got ${type}`);
         });
 
         this.disco.on('HomeTypeChanged', ({ type }) => {
@@ -205,10 +127,7 @@ export default class FlightEvents {
                 },
             });
 
-            this.sendPacketToEveryone({
-                action: 'alert',
-                data: 'HomeTypeChanged got ' + type,
-            });
+            this.alert(`HomeTypeChanged got ${type}`);
         });
 
         this.disco.on('SensorsStatesListChanged', ({ sensorName, sensorState }) => {
