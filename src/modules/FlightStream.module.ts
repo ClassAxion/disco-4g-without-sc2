@@ -9,6 +9,11 @@ export type Resolution = {
     height: number;
 };
 
+export const Resolutions: { [key: string]: Resolution } = {
+    '480p': { width: 856, height: 480 },
+    '720p': { width: 1280, height: 720 },
+};
+
 export default class FlightStream {
     private resolution: Resolution;
     private process: any;

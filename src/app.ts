@@ -9,7 +9,7 @@ import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDisco
 import ParrotDiscoMap from './modules/ParrotDiscoMap.module';
 import Validation from './modules/Validation.module';
 import FlightCache from './modules/FlightCache.module';
-import FlightStream, { Resolution } from './modules/FlightStream.module';
+import FlightStream, { Resolution, Resolutions } from './modules/FlightStream.module';
 import Users from 'modules/Users.module';
 import FlightEvents from 'modules/FlightEvents.module';
 import APIServer from 'modules/APIServer.module';
@@ -27,11 +27,6 @@ const disco: ParrotDisco = new ParrotDisco({
 const streamQuality: string = ['480p', '720p'].includes(process.env.STREAM_QUALITY)
     ? process.env.STREAM_QUALITY
     : '480p';
-
-const streamQualities: { [key: string]: Resolution } = {
-    '480p': { width: 856, height: 480 },
-    '720p': { width: 1280, height: 720 },
-};
 
 const discoId: string = process.env.DISCO_ID || Math.random().toString(36).slice(2);
 
@@ -55,7 +50,7 @@ const localCache: FlightCache = new FlightCache({
     takeOffAt: -1,
 });
 
-const flightStream: FlightStream = new FlightStream(logger, streamQualities[streamQuality]);
+const flightStream: FlightStream = new FlightStream(logger, Resolutions[streamQuality]);
 
 /*
 (async () => {
