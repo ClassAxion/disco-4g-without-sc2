@@ -31,7 +31,7 @@
         "fluent-ffmpeg": "^2.1.2",
         "node-bebop": "^0.6.0",
         "nodemon": "^2.0.12",
-        "parrot-disco-api": "git+https://github.com/ClassAxion/parrot-disco-api.git",
+        "parrot-disco-api": "github:ClassAxion/parrot-disco-api",
         "simple-peer": "^9.11.0",
         "socket.io": "^4.1.3",
         "socket.io-client": "^4.1.3",
