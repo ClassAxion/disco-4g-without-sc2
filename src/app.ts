@@ -225,7 +225,7 @@ io.on('connection', async (socket) => {
 
     clients.create(
         socket.id,
-        '',
+        address,
         {
             isSuperUser: false,
             canPilotingPitch: false,
