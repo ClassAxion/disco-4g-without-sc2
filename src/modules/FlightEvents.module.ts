@@ -75,12 +75,24 @@ export default class FlightEvents {
             }
         });
 
+        /* TESTING */
+
         this.disco.on('HomeChanged', (data) => {
             this.alert(`HomeChanged to ${JSON.stringify(data)}`);
+
+            this.logger.info(`HomeChanged to ${JSON.stringify(data)}`);
         });
 
         this.disco.on('HomeTypeAvailabilityChanged', (data) => {
             this.alert(`HomeTypeAvailabilityChanged to ${JSON.stringify(data)}`);
+
+            this.logger.info(`HomeTypeAvailabilityChanged to ${JSON.stringify(data)}`);
+        });
+
+        this.disco.on('ResetHomeChanged', (data) => {
+            this.alert(`ResetHomeChanged to ${JSON.stringify(data)}`);
+
+            this.logger.info(`ResetHomeChanged to ${JSON.stringify(data)}`);
         });
     }
 
@@ -128,6 +140,8 @@ export default class FlightEvents {
             });
 
             this.alert(`HomeTypeChanged got ${type}`);
+
+            this.logger.info(`HomeTypeChanged got ${type}`);
         });
 
         this.disco.on('SensorsStatesListChanged', ({ sensorName, sensorState }) => {

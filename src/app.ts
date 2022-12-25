@@ -431,14 +431,16 @@ io.on('connection', async (socket) => {
 
                         logger.info(`Started landing flight plan`);
                     }
-                } else if (packet.action && packet.action === 'test') {
+                } else if (packet.action && packet.action === 'test1') {
                     disco.GPSSettings.resetHome();
-
+                } else if (packet.action && packet.action === 'test2') {
                     disco.GPSSettings.setHomeLocation(53.34877, 17.64075, 50);
 
-                    disco.GPSSettings.sendControllerGPS(53.34877, 17.64075, 50, 2, 2);
-
                     disco.GPSSettings.setHomeType(1);
+                } else if (packet.action && packet.action === 'test3') {
+                    disco.GPSSettings.sendControllerGPS(53.34877, 17.64075, 50, -1, -1);
+
+                    disco.GPSSettings.setHomeType(2);
                 }
             }
         }
