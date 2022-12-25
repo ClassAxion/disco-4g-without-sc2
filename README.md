@@ -51,6 +51,7 @@ I just want to have fun with Parrot Disco and I need something new :)
 -   TBA...
 
 # TODO IN 2023
+
 -   Add icon on top navbar for camera settings, show modal with settings on click
 -   Automatic camera exposure relative to sun function
 -   Show modal on click on gamepad icon
@@ -61,7 +62,7 @@ I just want to have fun with Parrot Disco and I need something new :)
 -   Connect SkyAware to show other planes with low AGL on the map (on dashboard and global map)
 -   Add table on global map to show parrots parameters
 -   Create disco auto following autonomous function
--   Create camera automatic pointing to other disco 
+-   Create camera automatic pointing to other disco
 -   Implement "Click on map and fly to this point" function
 -   Create "no fly" zones (cities, etc)
 -   Create blackbox to save all parameters during flight (csv file with timestamp)
@@ -71,5 +72,15 @@ I just want to have fun with Parrot Disco and I need something new :)
 -   Create flightplan controller for creating flightplans and running it
 -   Automatic base parameters setup on first connect
 -   Automatic checking for "landing" flightplan during first connect
--   Add settings icon on top navbar, show modal with global settings on click 
+-   Add settings icon on top navbar, show modal with global settings on click
 -   Reset input's on primary (controlling) pilot disconnect (reset pitch, roll, etc.)
+
+# Useful links
+
+-   https://developer.parrot.com/docs/mavlink-flightplan/messages_v1.html
+-   https://developer.parrot.com/docs/mavlink-flightplan/overview.html
+-   https://mavlink.io/en/messages/common.html#mav_commands
+-   https://mavlink.io/en/file_formats/#mission_plain_text_file
+-   https://github.com/mavlink/mavlink/blob/master/message_definitions/v1.0/common.xml
+-   https://ardupilot.org/copter/docs/common-mavlink-mission-command-messages-mav_cmd.html#mav-cmd-nav-waypoint
+-   https://github.com/Parrot-Developers/libARMavlink/blob/master/Sources/ARMAVLINK_MissionItemUtils.c
