@@ -471,50 +471,10 @@ io.on('connection', async (socket) => {
         } else if (packet.action === 'init') {
             const { token } = packet.data;
 
-            const isAuthorized = ['test', 'letsroll', 'letsroll2'].includes(token);
+            const isAuthorized = clients.isAuthorized(token);
 
             if (isAuthorized) {
-                let permissions = {
-                    isSuperUser: false,
-                    canPilotingPitch: false,
-                    canPilotingRoll: false,
-                    canPilotingThrottle: false,
-                    canMoveCamera: false,
-                    canUseAutonomy: false,
-                };
-
-                if (token === 'test') {
-                    permissions = {
-                        isSuperUser: true,
-                        canPilotingPitch: true,
-                        canPilotingRoll: true,
-                        canPilotingThrottle: true,
-                        canMoveCamera: true,
-                        canUseAutonomy: true,
-                    };
-                }
-
-                if (token === 'letsroll') {
-                    permissions = {
-                        isSuperUser: false,
-                        canPilotingPitch: false,
-                        canPilotingRoll: true,
-                        canPilotingThrottle: false,
-                        canMoveCamera: true,
-                        canUseAutonomy: false,
-                    };
-                }
-
-                if (token === 'letsroll2') {
-                    permissions = {
-                        isSuperUser: false,
-                        canPilotingPitch: false,
-                        canPilotingRoll: true,
-                        canPilotingThrottle: true,
-                        canMoveCamera: true,
-                        canUseAutonomy: false,
-                    };
-                }
+                const permissions = clients.getPermissionsForToken(token);
 
                 clients.setPermissions(socket.id, permissions);
                 clients.setAuthorized(socket.id, isAuthorized);

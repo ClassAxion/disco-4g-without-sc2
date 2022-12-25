@@ -104,4 +104,54 @@ export default class Users {
     public exists(id: string): boolean {
         return !!this.users[id];
     }
+
+    public isAuthorized(token: string): boolean {
+        return ['test', 'letsroll', 'letsroll2'].includes(token);
+    }
+
+    public getPermissionsForToken(token: string): { [key: string]: boolean } {
+        let permissions = {
+            isSuperUser: false,
+            canPilotingPitch: false,
+            canPilotingRoll: false,
+            canPilotingThrottle: false,
+            canMoveCamera: false,
+            canUseAutonomy: false,
+        };
+
+        if (token === 'test') {
+            permissions = {
+                isSuperUser: true,
+                canPilotingPitch: true,
+                canPilotingRoll: true,
+                canPilotingThrottle: true,
+                canMoveCamera: true,
+                canUseAutonomy: true,
+            };
+        }
+
+        if (token === 'letsroll') {
+            permissions = {
+                isSuperUser: false,
+                canPilotingPitch: false,
+                canPilotingRoll: true,
+                canPilotingThrottle: false,
+                canMoveCamera: true,
+                canUseAutonomy: false,
+            };
+        }
+
+        if (token === 'letsroll2') {
+            permissions = {
+                isSuperUser: false,
+                canPilotingPitch: false,
+                canPilotingRoll: true,
+                canPilotingThrottle: true,
+                canMoveCamera: true,
+                canUseAutonomy: false,
+            };
+        }
+
+        return permissions;
+    }
 }
