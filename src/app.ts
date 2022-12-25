@@ -579,7 +579,7 @@ io.on('connection', async (socket) => {
     socket.on('signal', (data) => peer.signal(data));
 
     socket.on('disconnect', () => {
-        logger.info('Socket disconnected, peer destroyed.');
+        logger.info(`Socket ${socket.id} disconnected, peer destroyed.`);
 
         clearInterval(pingInterval);
 
