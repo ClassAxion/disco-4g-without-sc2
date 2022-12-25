@@ -18,6 +18,7 @@ I just want to have fun with Parrot Disco and I need something new :)
 -   `ARStream2` is streaming FROM disco to SC2. You need to initialize the stream. Default video ports `55004` and `55005` are CLOSED on Disco! You can't connect to them.
 -   Discover port `44444` used to sending controller name, id and stream ports
 -   Control UDP port `54321` (used to receive control actions from SC2)
+-   Parrot Disco ID `090e`
 
 ## SkyController 2
 
@@ -84,3 +85,5 @@ I just want to have fun with Parrot Disco and I need something new :)
 -   https://github.com/mavlink/mavlink/blob/master/message_definitions/v1.0/common.xml
 -   https://ardupilot.org/copter/docs/common-mavlink-mission-command-messages-mav_cmd.html#mav-cmd-nav-waypoint
 -   https://github.com/Parrot-Developers/libARMavlink/blob/master/Sources/ARMAVLINK_MissionItemUtils.c
+-   https://developer.parrot.com/docs/olympe/arsdkng_ardrone3_piloting.html#olympe.enums.ardrone3.Piloting.MoveTo_Orientation_mode
+-   https://github.com/Parrot-Developers/arsdk-xml/blob/master/xml/ardrone3.xml
