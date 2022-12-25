@@ -233,11 +233,13 @@ export default class FlightEvents {
             });
         });
 
-        this.disco.on('MavlinkPlayErrorStateChanged', (data) => {
+        this.disco.on('MavlinkPlayErrorStateChanged', ({ error }) => {
+            this.alert(`MavlinkPlayErrorStateChanged set to ${error}`);
+
             this.sendPacketToEveryone({
                 action: 'event',
                 eventId: 'MavlinkPlayErrorStateChanged',
-                data,
+                data: { error },
             });
         });
 
