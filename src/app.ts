@@ -436,11 +436,11 @@ io.on('connection', async (socket) => {
                 } else if (packet.action && packet.action === 'test2') {
                     disco.GPSSettings.setHomeLocation(53.34877, 17.64075, 50);
 
-                    disco.GPSSettings.setHomeType(1);
+                    disco.GPSSettings.setHomeType(0);
                 } else if (packet.action && packet.action === 'test3') {
                     disco.GPSSettings.sendControllerGPS(53.34877, 17.64075, 50, -1, -1);
 
-                    disco.GPSSettings.setHomeType(2);
+                    disco.GPSSettings.setHomeType(1);
                 }
             }
         }
