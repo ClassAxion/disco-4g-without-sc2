@@ -127,6 +127,19 @@ flightEvents.createTelemetry();
 
 let reconneting = false;
 
+disco.on('unknown', (data) => {
+    const commandProject = data.readUInt8(0),
+        commandClass = data.readUInt8(1),
+        commandId = data.readUInt16LE(2);
+
+    if ([136].includes(commandProject)) return;
+    if (commandProject === 0 && commandClass === 5 && [11, 12, 13, 14].includes(commandId)) return;
+    if (commandProject === 1 && commandClass === 20 && [7, 8, 9].includes(commandId)) return;
+    if (commandProject === 0 && commandClass === 17 && [2].includes(commandId)) return;
+
+    logger.warning(`Got unknown command ${commandProject} > ${commandClass} > ${commandId}`);
+});
+
 disco.on('disconnected', async () => {
     isConnected = false;
 
@@ -428,16 +441,17 @@ io.on('connection', async (socket) => {
                 } else if (packet.action && packet.action === 'test') {
                     const type = packet.data;
 
+                    logger.info(`Started test ${type}`);
+
                     if (type == 1) {
                         disco.GPSSettings.resetHome();
                     } else if (type == 2) {
-                        disco.GPSSettings.setHomeLocation(53.34877, 17.64075, 50);
-
                         disco.GPSSettings.setHomeType(0);
                     } else if (type == 3) {
-                        disco.GPSSettings.sendControllerGPS(53.34877, 17.64075, 50, -1, -1);
-
+                    } else if (type == 4) {
                         disco.GPSSettings.setHomeType(1);
+                    } else if (type == 5) {
+                        disco.GPSSettings.sendControllerGPS(53.34425666666666, 17.643973333333335, 173, 3, 3);
                     }
                 }
             }
