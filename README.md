@@ -87,3 +87,11 @@ I just want to have fun with Parrot Disco and I need something new :)
 -   https://github.com/Parrot-Developers/libARMavlink/blob/master/Sources/ARMAVLINK_MissionItemUtils.c
 -   https://developer.parrot.com/docs/olympe/arsdkng_ardrone3_piloting.html#olympe.enums.ardrone3.Piloting.MoveTo_Orientation_mode
 -   https://github.com/Parrot-Developers/arsdk-xml/blob/master/xml/ardrone3.xml
+-   https://github.com/gazebosim/gazebo-classic
+-   https://github.com/Parrot-Developers/firmwared
+-   https://bebop-autonomy.readthedocs.io/en/latest/
+-   https://github.com/AutonomyLab/bebop_autonomy
+-   https://github.com/jeremyfix/docker/tree/master/headless-nvidia-parrot-sphinx-host-displays
+-   https://forum.developer.parrot.com/t/running-sphinx-inside-docker-container/9058/13
+-   https://web.archive.org/web/20180707103759/http://developer.parrot.com/docs/sphinx/installation.html
+-   https://gist.github.com/jeremyfix/929a68e990c6cccc4074ed0259db551c
