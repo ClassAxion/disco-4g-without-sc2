@@ -16,7 +16,7 @@ export default class FlightEvents {
         private readonly map: ParrotDiscoMap,
     ) {}
 
-    public alert(message: string, level: string = undefined) {
+    public alert(message: string, level: string = 'info') {
         this.sendPacketToEveryone({
             action: 'alert',
             data: {
@@ -43,24 +43,12 @@ export default class FlightEvents {
             }
         });
 
-        this.disco.on('VibrationLevelChanged', ({ state }) => {
-            this.alert(`VibrationLevelChanged changed to ${state}`);
-        });
-
         this.disco.on('moveToChanged', ({ status }) => {
             this.alert(`MoveTo got ${status}`, 'success');
         });
 
         this.disco.on('MissonItemExecuted', ({ idx }) => {
             this.alert(`Executed waypoint #${idx}`, 'success');
-        });
-
-        this.disco.on('NavigateHomeStateChanged', (data) => {
-            this.alert(`NavigateHomeStateChanged got ${JSON.stringify(data)}`);
-        });
-
-        this.disco.on('AlertStateChanged', (data) => {
-            this.alert(`AlertStateChanged got ${JSON.stringify(data)}`);
         });
 
         this.disco.on('MavlinkFilePlayingStateChanged', (data) => {
@@ -77,8 +65,26 @@ export default class FlightEvents {
 
         /* TESTING */
 
+        this.disco.on('AlertStateChanged', (data) => {
+            this.alert(`AlertStateChanged got ${JSON.stringify(data)}`);
+
+            this.logger.info(`AlertStateChanged to ${JSON.stringify(data)}`);
+        });
+
+        this.disco.on('VibrationLevelChanged', ({ state }) => {
+            this.alert(`VibrationLevelChanged changed to ${state}`);
+
+            this.logger.info(`VibrationLevelChanged to ${state}`);
+        });
+
+        this.disco.on('NavigateHomeStateChanged', (data) => {
+            this.alert(`NavigateHomeStateChanged got ${JSON.stringify(data)}`);
+
+            this.logger.info(`NavigateHomeStateChanged to ${JSON.stringify(data)}`);
+        });
+
         this.disco.on('HomeChanged', (data) => {
-            this.alert(`HomeChanged to ${JSON.stringify(data)}`);
+            // this.alert(`HomeChanged to ${JSON.stringify(data)}`);
 
             this.logger.info(`HomeChanged to ${JSON.stringify(data)}`);
         });
@@ -93,6 +99,24 @@ export default class FlightEvents {
             this.alert(`ResetHomeChanged to ${JSON.stringify(data)}`);
 
             this.logger.info(`ResetHomeChanged to ${JSON.stringify(data)}`);
+        });
+
+        this.disco.on('PitotCalibrationStateChanged', ({ state, lastError }) => {
+            this.alert(`PitotCalibrationStateChanged to ${state} (${lastError})`);
+
+            this.logger.info(`PitotCalibrationStateChanged to ${state} (${lastError})`);
+        });
+
+        this.disco.on('MotorFlightsStatusChanged', (data) => {
+            this.alert(`MotorFlightsStatusChanged to ${JSON.stringify(data)}`);
+
+            this.logger.info(`MotorFlightsStatusChanged to ${JSON.stringify(data)}`);
+        });
+
+        this.disco.on('MotorErrorLastErrorChanged', (data) => {
+            this.alert(`MotorErrorLastErrorChanged to ${JSON.stringify(data)}`);
+
+            this.logger.info(`MotorErrorLastErrorChanged to ${JSON.stringify(data)}`);
         });
     }
 
@@ -125,6 +149,8 @@ export default class FlightEvents {
             });
 
             this.alert(`HomeTypeChosenChanged got ${type}`);
+
+            this.logger.info(`HomeTypeChosenChanged to ${type}`);
         });
 
         this.disco.on('HomeTypeChanged', ({ type }) => {
