@@ -389,27 +389,21 @@ io.on('connection', async (socket) => {
                     const name = packet.data;
 
                     if (localCache.get('canTakeOff') || packet.force === true) {
-                        if (name === 'test') {
-                            logger.info(`Flight plan start TESTING`);
+                        disco.Mavlink.start(name + '.mavlink');
 
-                            disco.Piloting.moveTo(53.353077, 17.64584, 80);
-                        } else {
-                            disco.Mavlink.start(name + '.mavlink');
+                        logger.info(`User start flight plan`);
 
-                            logger.info(`User start flight plan`);
-
-                            try {
-                                peer.send(
-                                    JSON.stringify({
-                                        action: 'alert',
-                                        data: {
-                                            level: 'success',
-                                            message: 'Flight plan started',
-                                        },
-                                    }),
-                                );
-                            } catch {}
-                        }
+                        try {
+                            peer.send(
+                                JSON.stringify({
+                                    action: 'alert',
+                                    data: {
+                                        level: 'success',
+                                        message: 'Flight plan started',
+                                    },
+                                }),
+                            );
+                        } catch {}
                     } else {
                         logger.info(`Can't start flight plan`);
 
@@ -431,16 +425,20 @@ io.on('connection', async (socket) => {
 
                         logger.info(`Started landing flight plan`);
                     }
-                } else if (packet.action && packet.action === 'test1') {
-                    disco.GPSSettings.resetHome();
-                } else if (packet.action && packet.action === 'test2') {
-                    disco.GPSSettings.setHomeLocation(53.34877, 17.64075, 50);
+                } else if (packet.action && packet.action === 'test') {
+                    const type = packet.data;
 
-                    disco.GPSSettings.setHomeType(0);
-                } else if (packet.action && packet.action === 'test3') {
-                    disco.GPSSettings.sendControllerGPS(53.34877, 17.64075, 50, -1, -1);
+                    if (type == 1) {
+                        disco.GPSSettings.resetHome();
+                    } else if (type == 2) {
+                        disco.GPSSettings.setHomeLocation(53.34877, 17.64075, 50);
 
-                    disco.GPSSettings.setHomeType(1);
+                        disco.GPSSettings.setHomeType(0);
+                    } else if (type == 3) {
+                        disco.GPSSettings.sendControllerGPS(53.34877, 17.64075, 50, -1, -1);
+
+                        disco.GPSSettings.setHomeType(1);
+                    }
                 }
             }
         }
