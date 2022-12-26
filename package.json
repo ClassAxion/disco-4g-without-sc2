@@ -9,7 +9,9 @@
         "build": "npx tsc && cp package* build/ && cp stream.sdp build/ && cp -R flightplans build/",
         "format": "prettier --write \"src/*.ts\"",
         "lint": "tslint -p tsconfig.json",
-        "watch": "nodemon"
+        "watch": "nodemon",
+        "start": "ts-node src/app.ts",
+        "start-no-disco": "NO_DISCO=1 ts-node src/app.ts"
     },
     "files": [
         "build/*"

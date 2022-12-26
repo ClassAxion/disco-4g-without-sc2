@@ -9,10 +9,10 @@ import { ParrotDiscoFlyingState } from 'parrot-disco-api/build/enums/ParrotDisco
 import ParrotDiscoMap from './modules/ParrotDiscoMap.module';
 import Validation from './modules/Validation.module';
 import FlightCache from './modules/FlightCache.module';
-import FlightStream, { Resolution, Resolutions } from './modules/FlightStream.module';
-import Users from 'modules/Users.module';
-import FlightEvents from 'modules/FlightEvents.module';
-import APIServer from 'modules/APIServer.module';
+import FlightStream, { Resolutions } from './modules/FlightStream.module';
+import Users from './modules/Users.module';
+import FlightEvents from './modules/FlightEvents.module';
+import APIServer from './modules/APIServer.module';
 
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
 
