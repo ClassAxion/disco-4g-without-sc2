@@ -77,16 +77,21 @@ export default class FlightEvents {
             this.logger.info(`VibrationLevelChanged to ${state}`);
         });
 
-        this.disco.on('NavigateHomeStateChanged', (data) => {
-            this.alert(`NavigateHomeStateChanged got ${JSON.stringify(data)}`);
+        this.disco.on('NavigateHomeStateChanged', ({ state, reason }) => {
+            if (state === 'available') {
+                this.alert(`Navigating home is available`);
+                this.logger.warn(`Navigating home is available`);
+            } else if (state === 'unavailable') {
+                this.alert(`Navigating home is unavailable`, 'warning');
 
-            this.logger.info(`NavigateHomeStateChanged to ${JSON.stringify(data)}`);
+                this.logger.warn(`Navigating home is unavailable`);
+            }
         });
 
-        this.disco.on('HomeTypeAvailabilityChanged', (data) => {
-            this.alert(`HomeTypeAvailabilityChanged to ${JSON.stringify(data)}`);
+        this.disco.on('HomeTypeAvailabilityChanged', ({ type, available }) => {
+            this.alert(`Home ${type} is ${available ? 'available' : 'unavailable'}`);
 
-            this.logger.info(`HomeTypeAvailabilityChanged to ${JSON.stringify(data)}`);
+            this.logger.info(`Home ${type} is ${available ? 'available' : 'unavailable'}`);
         });
 
         this.disco.on('ResetHomeChanged', (data) => {
@@ -96,9 +101,22 @@ export default class FlightEvents {
         });
 
         this.disco.on('PitotCalibrationStateChanged', ({ state, lastError }) => {
-            this.alert(`PitotCalibrationStateChanged to ${state} (${lastError})`);
+            const required = state === 'required';
 
-            this.logger.info(`PitotCalibrationStateChanged to ${state} (${lastError})`);
+            this.localCache.set('pitotCalibrationRequired', required);
+
+            this.sendPacketToEveryone({
+                action: 'health',
+                data: {
+                    pitotCalibrationRequired: this.localCache.get('pitotCalibrationRequired'),
+                },
+            });
+
+            if (required) {
+                this.alert('Pitot need calibration', 'danger');
+
+                this.logger.warn(`Pitot need calibration`);
+            }
         });
 
         this.disco.on('MotorFlightsStatusChanged', (data) => {
@@ -116,17 +134,19 @@ export default class FlightEvents {
 
     public createChecks() {
         this.disco.on('MagnetoCalibrationRequiredState', ({ required }) => {
-            this.localCache.set('lastCalibrationStatus', required === 0);
+            this.localCache.set('magnetoCalibrationRequired', required === 1);
 
             this.sendPacketToEveryone({
-                action: 'check',
+                action: 'health',
                 data: {
-                    lastCalibrationStatus: this.localCache.get('lastCalibrationStatus'),
+                    magnetoCalibrationRequired: this.localCache.get('magnetoCalibrationRequired'),
                 },
             });
 
             if (required === 1) {
                 this.alert('Magneto need calibration', 'danger');
+
+                this.logger.warn(`Magneto need calibration`);
             }
         });
 
@@ -157,18 +177,35 @@ export default class FlightEvents {
         });
 
         this.disco.on('SensorsStatesListChanged', ({ sensorName, sensorState }) => {
-            if (!sensorState) {
-                this.localCache.set('lastHardwareStatus', false);
+            const sensorNameToKey = {
+                IMU: 'imuState',
+                barometer: 'barometerState',
+                ultrasound: 'ultrasonicState',
+                GPS: 'gpsState',
+                magnetometer: 'magnetometerState',
+                vertical_camera: 'verticalCameraState',
+            };
 
-                this.sendPacketToEveryone({
-                    action: 'check',
-                    data: {
-                        lastHardwareStatus: this.localCache.get('lastHardwareStatus'),
-                    },
-                });
+            const key = sensorNameToKey[sensorName];
 
-                this.logger.error(`Cannot take off due to sensor state - ${sensorName}`);
+            if (!key) {
+                this.logger.error(`Got invalid sensor - ${sensorName}`);
+
+                return;
             }
+
+            const state = sensorState === 1;
+
+            this.localCache.set(key, state);
+
+            this.sendPacketToEveryone({
+                action: 'health',
+                data: {
+                    [key]: state,
+                },
+            });
+
+            if (!state) this.logger.error(`Cannot take off due to sensor state - ${sensorName} = ${sensorState}`);
         });
 
         this.disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
@@ -227,6 +264,8 @@ export default class FlightEvents {
                     altitude,
                 },
             });
+
+            this.logger.info(`Reporting current home as N${latitude} E${longitude} ${altitude}`);
         });
 
         this.disco.on('AirSpeedChanged', ({ airSpeed }) => {
