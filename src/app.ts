@@ -50,7 +50,6 @@ const localCache: FlightCache = new FlightCache({
     lastHardwareStatus: true,
     homeTypeChosen: 'UNKNOWN',
     homeTypeWanted: 'UNKNOWN',
-    lastRTHStatus: false,
     takeOffAt: -1,
 });
 
@@ -599,7 +598,6 @@ io.on('connection', async (socket) => {
             {
                 action: 'check',
                 data: {
-                    lastRTHStatus: localCache.get('lastRTHStatus'),
                     lastCalibrationStatus: localCache.get('lastCalibrationStatus'),
                     lastHardwareStatus: localCache.get('lastHardwareStatus'),
                 },
