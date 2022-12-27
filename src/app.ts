@@ -628,6 +628,12 @@ io.on('connection', async (socket) => {
     socket.on('disconnect', () => {
         logger.info(`Socket ${socket.id} disconnected, peer destroyed.`);
 
+        const permissions = clients.getPermissions(socket.id);
+
+        if (permissions.canPilotingPitch) disco.pilotingData.pitch = 0;
+        if (permissions.canPilotingRoll) disco.pilotingData.roll = 0;
+        if (permissions.canPilotingThrottle) disco.pilotingData.gaz = 0;
+
         clearInterval(pingInterval);
 
         peer.destroy();
