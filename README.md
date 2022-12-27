@@ -57,7 +57,6 @@ I just want to have fun with Parrot Disco and I need something new :)
 -   Automatic camera exposure relative to sun function
 -   Show modal on click on gamepad icon
 -   Add permissions icon on top navbar, show modal on click
--   Set font with static width on navbar
 -   Add autonomous icon on top navbar, show modal on click
 -   Create view for VR (with some parameters overlay if possible)
 -   Connect SkyAware to show other planes with low AGL on the map (on dashboard and global map)

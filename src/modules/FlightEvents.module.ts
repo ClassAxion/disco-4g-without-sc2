@@ -83,12 +83,6 @@ export default class FlightEvents {
             this.logger.info(`NavigateHomeStateChanged to ${JSON.stringify(data)}`);
         });
 
-        this.disco.on('HomeChanged', (data) => {
-            // this.alert(`HomeChanged to ${JSON.stringify(data)}`);
-
-            this.logger.info(`HomeChanged to ${JSON.stringify(data)}`);
-        });
-
         this.disco.on('HomeTypeAvailabilityChanged', (data) => {
             this.alert(`HomeTypeAvailabilityChanged to ${JSON.stringify(data)}`);
 
@@ -137,37 +131,29 @@ export default class FlightEvents {
         });
 
         this.disco.on('HomeTypeChosenChanged', ({ type }) => {
-            const isTakeOff: boolean = type === 'TAKEOFF';
-
-            this.localCache.set('lastRTHStatus', isTakeOff);
+            this.localCache.set('homeTypeChosen', type);
 
             this.sendPacketToEveryone({
-                action: 'check',
+                action: 'home',
                 data: {
-                    lastRTHStatus: this.localCache.get('lastRTHStatus'),
+                    typeChosen: type,
                 },
             });
 
-            this.alert(`HomeTypeChosenChanged got ${type}`);
-
-            this.logger.info(`HomeTypeChosenChanged to ${type}`);
+            this.logger.info(`Home type chosen to ${type}`);
         });
 
         this.disco.on('HomeTypeChanged', ({ type }) => {
-            const isTakeOff: boolean = type === 'TAKEOFF';
-
-            this.localCache.set('lastHomeTypeStatus', isTakeOff);
+            this.localCache.set('homeTypeWanted', type);
 
             this.sendPacketToEveryone({
-                action: 'check',
+                action: 'home',
                 data: {
-                    lastHomeTypeStatus: this.localCache.get('lastHomeTypeStatus'),
+                    typeWanted: type,
                 },
             });
 
-            this.alert(`HomeTypeChanged got ${type}`);
-
-            this.logger.info(`HomeTypeChanged got ${type}`);
+            this.logger.info(`Home type wanted changed to ${type}`);
         });
 
         this.disco.on('SensorsStatesListChanged', ({ sensorName, sensorState }) => {
@@ -228,6 +214,21 @@ export default class FlightEvents {
     }
 
     public createTelemetry() {
+        this.disco.on('HomeChanged', ({ latitude, longitude, altitude }) => {
+            this.localCache.set('homeLatitude', latitude);
+            this.localCache.set('homeLongitude', longitude);
+            this.localCache.set('homeAltitude', altitude);
+
+            this.sendPacketToEveryone({
+                action: 'home',
+                data: {
+                    latitude,
+                    longitude,
+                    altitude,
+                },
+            });
+        });
+
         this.disco.on('AirSpeedChanged', ({ airSpeed }) => {
             this.sendPacketToEveryone({
                 action: 'airspeed',

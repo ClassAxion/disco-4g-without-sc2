@@ -39,13 +39,17 @@ const localCache: FlightCache = new FlightCache({
     altitude: 0,
     flyingState: ParrotDiscoFlyingState.LANDED,
     canTakeOff: false,
+    homeLatitude: 0,
+    homeLongitude: 0,
+    homeAltitude: 0,
     cameraMaxTiltSpeed: 0,
     cameraMaxPanSpeed: 0,
     defaultCameraTilt: 0,
     defaultCameraPan: 0,
     lastCalibrationStatus: false,
     lastHardwareStatus: true,
-    lastHomeTypeStatus: false,
+    homeTypeChosen: 'UNKNOWN',
+    homeTypeWanted: 'UNKNOWN',
     lastRTHStatus: false,
     takeOffAt: -1,
 });
@@ -453,6 +457,26 @@ io.on('connection', async (socket) => {
                     } else if (type == 5) {
                         disco.GPSSettings.sendControllerGPS(53.34425666666666, 17.643973333333335, 173, 3, 3);
                     }
+                } else if (packet.action && packet.action === 'home') {
+                    const { typeWanted, latitude, longitude, altitude } = packet.data;
+
+                    if (!!typeWanted) {
+                        logger.info(`User want home to ${typeWanted}`);
+
+                        if (typeWanted === 'PILOT') {
+                            disco.GPSSettings.setHomeType(1);
+                        } else if (typeWanted === 'TAKEOFF') {
+                            disco.GPSSettings.setHomeType(0);
+                        }
+
+                        localCache.set('homeTypeWanted', typeWanted);
+                    }
+
+                    if (!!latitude && !!longitude && !!altitude) {
+                        logger.info(`User set home to N${latitude} E${longitude} ${altitude}`);
+
+                        disco.GPSSettings.sendControllerGPS(latitude, longitude, altitude, 3, 3);
+                    }
                 }
             }
         }
@@ -576,9 +600,18 @@ io.on('connection', async (socket) => {
                 action: 'check',
                 data: {
                     lastRTHStatus: localCache.get('lastRTHStatus'),
-                    lastHomeTypeStatus: localCache.get('lastHomeTypeStatus'),
                     lastCalibrationStatus: localCache.get('lastCalibrationStatus'),
                     lastHardwareStatus: localCache.get('lastHardwareStatus'),
+                },
+            },
+            {
+                action: 'home',
+                data: {
+                    latitude: localCache.get('homeLatitude'),
+                    longitude: localCache.get('homeLongitude'),
+                    altitude: localCache.get('homeAltitude'),
+                    typeWanted: localCache.get('homeTypeWanted'),
+                    typeChosen: localCache.get('homeTypeChosen'),
                 },
             },
         ];
