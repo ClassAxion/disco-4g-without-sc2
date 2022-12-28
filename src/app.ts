@@ -66,6 +66,26 @@ const localCache: FlightCache = new FlightCache({
 });
 
 const canTakeOff = () => {
+    const calibration = ['pitotCalibrationRequired', 'magnetoCalibrationRequired'];
+
+    for (const key of calibration) {
+        if (localCache.get(key)) return false;
+    }
+
+    const states = [
+        'imuState',
+        'barometerState',
+        'ultrasonicState',
+        'gpsState',
+        'magnetometerState',
+        'verticalCameraState',
+        'flightPlanAvailability',
+    ];
+
+    for (const key of states) {
+        if (!localCache.get(key)) return false;
+    }
+
     return true;
 };
 
