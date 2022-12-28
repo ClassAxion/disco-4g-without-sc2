@@ -63,20 +63,6 @@ export default class FlightEvents {
             }
         });
 
-        /* TESTING */
-
-        this.disco.on('AlertStateChanged', (data) => {
-            this.alert(`AlertStateChanged got ${JSON.stringify(data)}`);
-
-            this.logger.info(`AlertStateChanged to ${JSON.stringify(data)}`);
-        });
-
-        this.disco.on('VibrationLevelChanged', ({ state }) => {
-            this.alert(`VibrationLevelChanged changed to ${state}`);
-
-            this.logger.info(`VibrationLevelChanged to ${state}`);
-        });
-
         this.disco.on('NavigateHomeStateChanged', ({ state, reason }) => {
             if (state === 'available') {
                 this.alert(`Navigating home is available`);
@@ -94,35 +80,37 @@ export default class FlightEvents {
             this.logger.info(`Home ${type} is ${available ? 'available' : 'unavailable'}`);
         });
 
+        /* TESTING */
+
+        this.disco.on('MassStorageInfoStateListChanged', ({ size, used_size }) => {
+            this.localCache.set('massStorageSize', size);
+            this.localCache.set('massStorageUsedSize', used_size);
+
+            this.sendPacketToEveryone({
+                action: 'stats',
+                data: {
+                    massStorageSize: size,
+                    massStorageUsedSize: used_size,
+                },
+            });
+        });
+
+        this.disco.on('AlertStateChanged', (data) => {
+            this.alert(`AlertStateChanged got ${JSON.stringify(data)}`);
+
+            this.logger.info(`AlertStateChanged to ${JSON.stringify(data)}`);
+        });
+
+        this.disco.on('VibrationLevelChanged', ({ state }) => {
+            this.alert(`VibrationLevelChanged changed to ${state}`);
+
+            this.logger.info(`VibrationLevelChanged to ${state}`);
+        });
+
         this.disco.on('ResetHomeChanged', (data) => {
             this.alert(`ResetHomeChanged to ${JSON.stringify(data)}`);
 
             this.logger.info(`ResetHomeChanged to ${JSON.stringify(data)}`);
-        });
-
-        this.disco.on('PitotCalibrationStateChanged', ({ state, lastError }) => {
-            const required = state === 'required';
-
-            this.localCache.set('pitotCalibrationRequired', required);
-
-            this.sendPacketToEveryone({
-                action: 'health',
-                data: {
-                    pitotCalibrationRequired: this.localCache.get('pitotCalibrationRequired'),
-                },
-            });
-
-            if (required) {
-                this.alert('Pitot need calibration', 'danger');
-
-                this.logger.warn(`Pitot need calibration`);
-            }
-        });
-
-        this.disco.on('MotorFlightsStatusChanged', (data) => {
-            this.alert(`MotorFlightsStatusChanged to ${JSON.stringify(data)}`);
-
-            this.logger.info(`MotorFlightsStatusChanged to ${JSON.stringify(data)}`);
         });
 
         this.disco.on('MotorErrorLastErrorChanged', (data) => {
@@ -248,9 +236,43 @@ export default class FlightEvents {
             if (flyingState === 1) this.localCache.set('takeOffAt', Date.now());
             if (flyingState === 4) this.localCache.set('takeOffAt', -1);
         });
+
+        this.disco.on('PitotCalibrationStateChanged', ({ state, lastError }) => {
+            const required = state === 'required';
+
+            this.localCache.set('pitotCalibrationRequired', required);
+
+            this.sendPacketToEveryone({
+                action: 'health',
+                data: {
+                    pitotCalibrationRequired: this.localCache.get('pitotCalibrationRequired'),
+                },
+            });
+
+            if (required) {
+                this.alert('Pitot need calibration', 'danger');
+
+                this.logger.warn(`Pitot need calibration`);
+            }
+        });
     }
 
     public createTelemetry() {
+        this.disco.on('MotorFlightsStatusChanged', ({ nbFlights, lastFlightDuration, totalFlightDuration }) => {
+            this.localCache.set('nbFlights', nbFlights);
+            this.localCache.set('lastFlightDuration', lastFlightDuration);
+            this.localCache.set('totalFlightDuration', totalFlightDuration);
+
+            this.sendPacketToEveryone({
+                action: 'stats',
+                data: {
+                    nbFlights,
+                    lastFlightDuration,
+                    totalFlightDuration,
+                },
+            });
+        });
+
         this.disco.on('HomeChanged', ({ latitude, longitude, altitude }) => {
             this.localCache.set('homeLatitude', latitude);
             this.localCache.set('homeLongitude', longitude);

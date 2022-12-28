@@ -59,6 +59,11 @@ const localCache: FlightCache = new FlightCache({
     homeTypeChosen: 'UNKNOWN',
     homeTypeWanted: 'TAKEOFF',
     takeOffAt: -1,
+    nbFlights: 0,
+    lastFlightDuration: 0,
+    totalFlightDuration: 0,
+    massStorageSize: 0,
+    massStorageUsedSize: 0,
 });
 
 const flightStream: FlightStream = new FlightStream(logger, Resolutions[streamQuality]);
@@ -624,6 +629,16 @@ io.on('connection', async (socket) => {
                     altitude: localCache.get('homeAltitude'),
                     typeWanted: localCache.get('homeTypeWanted'),
                     typeChosen: localCache.get('homeTypeChosen'),
+                },
+            },
+            {
+                action: 'stats',
+                data: {
+                    nbFlights: localCache.get('nbFlights'),
+                    lastFlightDuration: localCache.get('lastFlightDuration'),
+                    totalFlightDuration: localCache.get('totalFlightDuration'),
+                    massStorageSize: localCache.get('massStorageSize'),
+                    massStorageUsedSize: localCache.get('massStorageUsedSize'),
                 },
             },
         ];
