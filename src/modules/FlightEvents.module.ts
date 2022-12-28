@@ -82,19 +82,6 @@ export default class FlightEvents {
 
         /* TESTING */
 
-        this.disco.on('MassStorageInfoStateListChanged', ({ size, used_size }) => {
-            this.localCache.set('massStorageSize', size);
-            this.localCache.set('massStorageUsedSize', used_size);
-
-            this.sendPacketToEveryone({
-                action: 'stats',
-                data: {
-                    massStorageSize: size,
-                    massStorageUsedSize: used_size,
-                },
-            });
-        });
-
         this.disco.on('AlertStateChanged', (data) => {
             this.alert(`AlertStateChanged got ${JSON.stringify(data)}`);
 
@@ -197,25 +184,16 @@ export default class FlightEvents {
         });
 
         this.disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
-            const canTakeOff = AvailabilityState === 1;
+            const available = AvailabilityState === 1;
 
-            if (!this.localCache.get('lastHardwareStatus')) {
-                this.logger.error(`Can't take off!`);
-            } else {
-                this.localCache.set('canTakeOff', canTakeOff);
+            this.localCache.set('flightPlanAvailability', available);
 
-                this.sendPacketToEveryone({
-                    action: 'canTakeOff',
-                    data: canTakeOff,
-                });
-
-                this.sendPacketToEveryone({
-                    action: 'state',
-                    data: {
-                        canTakeOff: canTakeOff,
-                    },
-                });
-            }
+            this.sendPacketToEveryone({
+                action: 'health',
+                data: {
+                    flightPlanAvailability: available,
+                },
+            });
         });
 
         this.disco.on('flyingState', ({ flyingState }) => {
@@ -258,6 +236,19 @@ export default class FlightEvents {
     }
 
     public createTelemetry() {
+        this.disco.on('MassStorageInfoStateListChanged', ({ size, used_size }) => {
+            this.localCache.set('massStorageSize', size);
+            this.localCache.set('massStorageUsedSize', used_size);
+
+            this.sendPacketToEveryone({
+                action: 'stats',
+                data: {
+                    massStorageSize: size,
+                    massStorageUsedSize: used_size,
+                },
+            });
+        });
+
         this.disco.on('MotorFlightsStatusChanged', ({ nbFlights, lastFlightDuration, totalFlightDuration }) => {
             this.localCache.set('nbFlights', nbFlights);
             this.localCache.set('lastFlightDuration', lastFlightDuration);

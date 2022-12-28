@@ -38,7 +38,6 @@ const localCache: FlightCache = new FlightCache({
     gpsFixed: false,
     altitude: 0,
     flyingState: ParrotDiscoFlyingState.LANDED,
-    canTakeOff: false,
     homeLatitude: 0,
     homeLongitude: 0,
     homeAltitude: 0,
@@ -55,7 +54,7 @@ const localCache: FlightCache = new FlightCache({
     magnetometerState: false,
     verticalCameraState: false,
     motorState: false,
-    lastHardwareStatus: true,
+    flightPlanAvailability: false,
     homeTypeChosen: 'UNKNOWN',
     homeTypeWanted: 'TAKEOFF',
     takeOffAt: -1,
@@ -65,6 +64,10 @@ const localCache: FlightCache = new FlightCache({
     massStorageSize: 0,
     massStorageUsedSize: 0,
 });
+
+const canTakeOff = () => {
+    return true;
+};
 
 const flightStream: FlightStream = new FlightStream(logger, Resolutions[streamQuality]);
 
@@ -405,7 +408,7 @@ io.on('connection', async (socket) => {
                 if (packet.action && packet.action === 'takeOff') {
                     logger.info(`Got take off command`);
 
-                    if (localCache.get('canTakeOff')) {
+                    if (canTakeOff()) {
                         disco.Piloting.userTakeOff();
 
                         logger.info(`User taking off`);
@@ -417,7 +420,7 @@ io.on('connection', async (socket) => {
 
                     const name = packet.data;
 
-                    if (localCache.get('canTakeOff') || packet.force === true) {
+                    if (canTakeOff() || packet.force === true) {
                         disco.Mavlink.start(name + '.mavlink');
 
                         logger.info(`User start flight plan`);
@@ -571,7 +574,6 @@ io.on('connection', async (socket) => {
                 data: {
                     flyingTime: takeOffAt < 0 ? 0 : Date.now() - takeOffAt,
                     flyingState: localCache.get('flyingState'),
-                    canTakeOff: localCache.get('canTakeOff'),
                     isDiscoConnected: isConnected,
                 },
             },
@@ -596,10 +598,6 @@ io.on('connection', async (socket) => {
                 data: localCache.get('flyingState'),
             },
             {
-                action: 'canTakeOff',
-                data: localCache.get('canTakeOff'),
-            },
-            {
                 action: 'camera',
                 data: {
                     maxSpeed: {
@@ -619,6 +617,7 @@ io.on('connection', async (socket) => {
                     gpsState: localCache.get('gpsState'),
                     magnetometerState: localCache.get('magnetometerState'),
                     verticalCameraState: localCache.get('verticalCameraState'),
+                    flightPlanAvailability: localCache.get('flightPlanAvailability'),
                 },
             },
             {
