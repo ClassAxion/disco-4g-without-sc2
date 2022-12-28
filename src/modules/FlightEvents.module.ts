@@ -184,7 +184,7 @@ export default class FlightEvents {
         });
 
         this.disco.on('AvailabilityStateChanged', ({ AvailabilityState }) => {
-            const available = AvailabilityState === 1;
+            const available = AvailabilityState == 1;
 
             this.localCache.set('flightPlanAvailability', available);
 
@@ -236,6 +236,86 @@ export default class FlightEvents {
     }
 
     public createTelemetry() {
+        this.disco.on('MinAltitudeChanged', ({ current, min, max }) => {
+            this.localCache.set('minAltitude', { current, min, max });
+
+            this.sendPacketToEveryone({
+                action: 'geofence',
+                data: {
+                    minAltitude: { current, min, max },
+                },
+            });
+
+            this.logger.info(`Set min altitude to ${current}m`);
+        });
+
+        this.disco.on('MaxAltitudeChanged', ({ current, min, max }) => {
+            this.localCache.set('maxAltitude', { current, min, max });
+
+            this.sendPacketToEveryone({
+                action: 'geofence',
+                data: {
+                    maxAltitude: { current, min, max },
+                },
+            });
+
+            this.logger.info(`Set max altitude to ${current}m`);
+        });
+
+        this.disco.on('NoFlyOverMaxDistanceChanged', ({ shouldNotFlyOver }) => {
+            const isEnabled = shouldNotFlyOver == 1;
+
+            this.sendPacketToEveryone({
+                action: 'geofence',
+                data: {
+                    isEnabled,
+                },
+            });
+
+            this.localCache.set('geofenceEnabled', isEnabled);
+
+            this.logger.info(`Geofence has been ${isEnabled ? 'enabled' : 'disabled'}`);
+        });
+
+        this.disco.on('MaxDistanceChanged', ({ current, min, max }) => {
+            this.localCache.set('maxDistance', { current, min, max });
+
+            this.sendPacketToEveryone({
+                action: 'geofence',
+                data: {
+                    maxDistance: { current, min, max },
+                },
+            });
+
+            this.logger.info(`Set max distance to ${current}m`);
+        });
+
+        this.disco.on('CirclingRadiusChanged', ({ current, min, max }) => {
+            this.localCache.set('circlingRadius', { current, min, max });
+
+            this.sendPacketToEveryone({
+                action: 'geofence',
+                data: {
+                    circlingRadius: { current, min, max },
+                },
+            });
+
+            this.logger.info(`Set circling radius to ${current}m`);
+        });
+
+        this.disco.on('CirclingAltitudeChanged', ({ current, min, max }) => {
+            this.localCache.set('circlingAltitude', { current, min, max });
+
+            this.sendPacketToEveryone({
+                action: 'geofence',
+                data: {
+                    circlingAltitude: { current, min, max },
+                },
+            });
+
+            this.logger.info(`Set circling altitude to ${current}m`);
+        });
+
         this.disco.on('MassStorageInfoStateListChanged', ({ size, used_size }) => {
             this.localCache.set('massStorageSize', size);
             this.localCache.set('massStorageUsedSize', used_size);
