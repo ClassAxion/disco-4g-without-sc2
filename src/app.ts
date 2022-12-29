@@ -525,7 +525,7 @@ io.on('connection', async (socket) => {
 
                     if (maxAltitude !== undefined) disco.PilotingSettings.setMaxAltitude(maxAltitude);
                     if (minAltitude !== undefined) disco.PilotingSettings.setMinAltitude(minAltitude);
-                    if (maxDistance !== undefined) disco.PilotingSettings.setMinAltitude(maxDistance);
+                    if (maxDistance !== undefined) disco.PilotingSettings.setMaxDistance(maxDistance);
                     if (circlingAltitude !== undefined) disco.PilotingSettings.setCirclingAltitude(circlingAltitude);
                     if (isEnabled !== undefined) disco.PilotingSettings.setGeofence(isEnabled ? 1 : 0);
                 }
