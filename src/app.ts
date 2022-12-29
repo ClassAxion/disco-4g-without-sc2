@@ -68,6 +68,15 @@ const localCache: FlightCache = new FlightCache({
     maxDistance: null,
     circlingAltitude: null,
     geofenceEnabled: false,
+    pictureFormat: 'unknown',
+    autoWhiteBalance: 'unknown',
+    exposition: { value: 0, min: -1.5, max: 1.5 },
+    saturation: { value: 0, min: -100, max: 100 },
+    timelapse: null,
+    videoStabilization: 'unknown',
+    videoRecordingMode: 'unknown',
+    videoFramerate: 'unknown',
+    videoResolutions: 'unknown',
 });
 
 const canTakeOff = () => {
@@ -368,26 +377,54 @@ io.on('connection', async (socket) => {
                 if (packet.action && packet.action === 'camera-center') {
                     disco.Camera.moveTo(localCache.get('defaultCameraTilt'), localCache.get('defaultCameraPan'));
                 } else if (packet.action && packet.action === 'camera') {
-                    if (packet.data.type === 'absolute') {
-                        disco.Camera.moveTo(packet.data.tilt, packet.data.pan);
-                    } else if (packet.data.type === 'degrees') {
-                        disco.Camera.move(packet.data.tilt, packet.data.pan);
+                    const { type } = packet.data;
 
-                        const { tilt, pan } = packet.data;
+                    if (!!type) {
+                        if (type === 'absolute') {
+                            disco.Camera.moveTo(packet.data.tilt, packet.data.pan);
+                        } else if (packet.data.type === 'degrees') {
+                            disco.Camera.move(packet.data.tilt, packet.data.pan);
 
-                        sendPacketToEveryone(
-                            {
-                                action: 'camera',
-                                data: {
-                                    currentSpeed: {
-                                        tilt,
-                                        pan,
+                            const { tilt, pan } = packet.data;
+
+                            sendPacketToEveryone(
+                                {
+                                    action: 'camera',
+                                    data: {
+                                        currentSpeed: {
+                                            tilt,
+                                            pan,
+                                        },
                                     },
                                 },
-                            },
-                            true,
-                        );
+                                true,
+                            );
+                        }
                     }
+
+                    const {
+                        pictureFormat,
+                        autoWhiteBalance,
+                        exposition,
+                        saturation,
+                        timelapseEnabled,
+                        timelapseInterval,
+                        videoStabilization,
+                        videoRecordingMode,
+                        videoFramerate,
+                        videoResolutions,
+                    } = packet.data;
+
+                    if (!!pictureFormat) disco.PictureSettings.setFormat(pictureFormat);
+                    if (!!autoWhiteBalance) disco.PictureSettings.setWhiteBalanceMode(autoWhiteBalance);
+                    if (!!exposition) disco.PictureSettings.setExposition(exposition);
+                    if (!!saturation) disco.PictureSettings.setSaturation(saturation);
+                    if (!!timelapseEnabled)
+                        disco.PictureSettings.setTimelapse(timelapseEnabled ? 1 : 0, timelapseInterval || 0);
+                    if (!!videoStabilization) disco.PictureSettings.setStabilizationMode(videoStabilization);
+                    if (!!videoRecordingMode) disco.PictureSettings.setRecordingMode(videoRecordingMode);
+                    if (!!videoFramerate) disco.PictureSettings.setVideoFramerate(videoFramerate);
+                    if (!!videoResolutions) disco.PictureSettings.setVideoResolutions(videoResolutions);
                 }
             }
 
@@ -488,17 +525,19 @@ io.on('connection', async (socket) => {
                     logger.info(`Started test ${type}`);
 
                     if (type == 1) {
-                        disco.PilotingSettings.setMaxAltitude(100);
-                        disco.PilotingSettings.setMinAltitude(80);
-                        disco.PilotingSettings.setCirclingAltitude(80);
+                        disco.PictureSettings.setFormat('raw');
+                        disco.PictureSettings.setWhiteBalanceMode('auto');
+                        disco.PictureSettings.setExposition(0);
+                        disco.PictureSettings.setSaturation(0);
+                        disco.PictureSettings.setTimelapse(0);
+                        disco.PictureSettings.setStabilizationMode('roll_pitch');
+                        disco.PictureSettings.setRecordingMode('quality');
+                        disco.PictureSettings.setVideoFramerate('30_FPS');
+                        disco.PictureSettings.setVideoResolutions('rec1080_stream480');
                     } else if (type == 2) {
-                        disco.Common.triggerAllStates();
                     } else if (type == 3) {
-                        disco.PilotingSettings.setGeofence(1);
                     } else if (type == 4) {
-                        disco.PilotingSettings.setGeofence(0);
                     } else if (type == 5) {
-                        disco.PilotingSettings.setMaxDistance(1000);
                     }
                 } else if (packet.action && packet.action === 'home') {
                     const { typeWanted, latitude, longitude, altitude } = packet.data;
@@ -640,6 +679,15 @@ io.on('connection', async (socket) => {
                         maxTiltSpeed: localCache.get('cameraMaxTiltSpeed'),
                         maxPanSpeed: localCache.get('cameraMaxPanSpeed'),
                     },
+                    pictureFormat: localCache.get('pictureFormat'),
+                    autoWhiteBalance: localCache.get('autoWhiteBalance'),
+                    exposition: localCache.get('exposition'),
+                    saturation: localCache.get('saturation'),
+                    timelapse: localCache.get('timelapse'),
+                    videoStabilization: localCache.get('videoStabilization'),
+                    videoRecordingMode: localCache.get('videoRecordingMode'),
+                    videoFramerate: localCache.get('videoFramerate'),
+                    videoResolutions: localCache.get('videoResolutions'),
                 },
             },
             {

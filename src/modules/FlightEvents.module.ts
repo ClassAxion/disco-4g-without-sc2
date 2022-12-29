@@ -82,6 +82,12 @@ export default class FlightEvents {
 
         /* TESTING */
 
+        this.disco.on('VideoAutorecordChanged', (data) => {
+            this.alert(`VideoAutorecordChanged got ${JSON.stringify(data)}`);
+
+            this.logger.info(`VideoAutorecordChanged to ${JSON.stringify(data)}`);
+        });
+
         this.disco.on('AlertStateChanged', (data) => {
             this.alert(`AlertStateChanged got ${JSON.stringify(data)}`);
 
@@ -236,6 +242,120 @@ export default class FlightEvents {
     }
 
     public createTelemetry() {
+        this.disco.on('PictureFormatChanged', ({ type }) => {
+            this.localCache.set('pictureFormat', type);
+
+            this.sendPacketToEveryone({
+                action: 'camera',
+                data: {
+                    pictureFormat: type,
+                },
+            });
+        });
+
+        this.disco.on('AutoWhiteBalanceChanged', ({ type }) => {
+            this.localCache.set('autoWhiteBalance', type);
+
+            this.sendPacketToEveryone({
+                action: 'camera',
+                data: {
+                    autoWhiteBalance: type,
+                },
+            });
+        });
+
+        this.disco.on('ExpositionChanged', ({ value, min, max }) => {
+            this.localCache.set('exposition', { value, min, max });
+
+            this.sendPacketToEveryone({
+                action: 'camera',
+                data: {
+                    exposition: {
+                        value,
+                        min,
+                        max,
+                    },
+                },
+            });
+        });
+
+        this.disco.on('SaturationChanged', ({ value, min, max }) => {
+            this.localCache.set('saturation', { value, min, max });
+
+            this.sendPacketToEveryone({
+                action: 'camera',
+                data: {
+                    saturation: {
+                        value,
+                        min,
+                        max,
+                    },
+                },
+            });
+        });
+
+        this.disco.on('TimelapseChanged', ({ enabled, interval, minInterval, maxInterval }) => {
+            const isEnabled = enabled == 1;
+
+            this.localCache.set('timelapse', { isEnabled, interval, minInterval, maxInterval });
+
+            this.sendPacketToEveryone({
+                action: 'camera',
+                data: {
+                    timelapse: {
+                        isEnabled,
+                        interval,
+                        minInterval,
+                        maxInterval,
+                    },
+                },
+            });
+        });
+
+        this.disco.on('VideoStabilizationModeChanged', ({ mode }) => {
+            this.localCache.set('videoStabilization', mode);
+
+            this.sendPacketToEveryone({
+                action: 'camera',
+                data: {
+                    videoStabilization: mode,
+                },
+            });
+        });
+
+        this.disco.on('VideoRecordingModeChanged', ({ mode }) => {
+            this.localCache.set('videoRecordingMode', mode);
+
+            this.sendPacketToEveryone({
+                action: 'camera',
+                data: {
+                    videoRecordingMode: mode,
+                },
+            });
+        });
+
+        this.disco.on('VideoFramerateChanged', ({ framerate }) => {
+            this.localCache.set('videoFramerate', framerate);
+
+            this.sendPacketToEveryone({
+                action: 'camera',
+                data: {
+                    videoFramerate: framerate,
+                },
+            });
+        });
+
+        this.disco.on('VideoResolutionsChanged', ({ type }) => {
+            this.localCache.set('videoResolutions', type);
+
+            this.sendPacketToEveryone({
+                action: 'camera',
+                data: {
+                    videoResolutions: type,
+                },
+            });
+        });
+
         this.disco.on('MinAltitudeChanged', ({ current, min, max }) => {
             this.localCache.set('minAltitude', { current, min, max });
 
@@ -345,6 +465,8 @@ export default class FlightEvents {
         });
 
         this.disco.on('HomeChanged', ({ latitude, longitude, altitude }) => {
+            if (latitude == 500 || longitude == 500 || altitude == 500) return;
+
             this.localCache.set('homeLatitude', latitude);
             this.localCache.set('homeLongitude', longitude);
             this.localCache.set('homeAltitude', altitude);
