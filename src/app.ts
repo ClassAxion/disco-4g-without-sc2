@@ -95,6 +95,7 @@ const localCache: FlightCache = new FlightCache({
     videoFramerate: 'unknown',
     videoResolutions: 'unknown',
     streamMode: 'unknown',
+    returningHome: false,
 });
 
 const canTakeOff = () => {
@@ -571,15 +572,6 @@ io.on('connection', async (socket) => {
                     logger.info(`Started test ${type}`);
 
                     if (type == 1) {
-                        disco.PictureSettings.setFormat('raw');
-                        disco.PictureSettings.setWhiteBalanceMode('auto');
-                        disco.PictureSettings.setExposition(0);
-                        disco.PictureSettings.setSaturation(0);
-                        disco.PictureSettings.setTimelapse(0);
-                        disco.PictureSettings.setStabilizationMode('roll_pitch');
-                        disco.PictureSettings.setRecordingMode('quality');
-                        disco.PictureSettings.setVideoFramerate('30_FPS');
-                        disco.PictureSettings.setVideoResolutions('rec1080_stream480');
                     } else if (type == 2) {
                     } else if (type == 3) {
                     } else if (type == 4) {
@@ -779,6 +771,12 @@ io.on('connection', async (socket) => {
                     maxDistance: localCache.get('maxDistance'),
                     circlingAltitude: localCache.get('circlingAltitude'),
                     isEnabled: localCache.get('geofenceEnabled'),
+                },
+            },
+            {
+                action: 'rth',
+                data: {
+                    returningHome: localCache.get('returningHome'),
                 },
             },
         ];

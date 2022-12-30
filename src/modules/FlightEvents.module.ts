@@ -63,21 +63,6 @@ export default class FlightEvents {
             }
         });
 
-        this.disco.on('NavigateHomeStateChanged', ({ state, reason }) => {
-            if (state === 'available') {
-                this.alert(`Navigating home is available`);
-                this.logger.warn(`Navigating home is available`);
-            } else if (state === 'unavailable') {
-                this.alert(`Navigating home is unavailable`, 'danger');
-
-                this.logger.warn(`Navigating home is unavailable`);
-            } else if (state === 'inProgress') {
-                this.alert(`Navigating home - ${reason}`, 'warning');
-
-                this.logger.warn(`Navigating home - ${reason}`);
-            }
-        });
-
         this.disco.on('HomeTypeAvailabilityChanged', ({ type, available }) => {
             this.alert(`Home ${type} is ${available ? 'available' : 'unavailable'}`);
 
@@ -246,6 +231,30 @@ export default class FlightEvents {
     }
 
     public createTelemetry() {
+        this.disco.on('NavigateHomeStateChanged', ({ state, reason }) => {
+            if (state === 'available') {
+                this.alert(`Navigating home is available`);
+                this.logger.warn(`Navigating home is available`);
+            } else if (state === 'unavailable') {
+                this.alert(`Navigating home is unavailable`, 'danger');
+
+                this.logger.warn(`Navigating home is unavailable`);
+            } else if (state === 'inProgress') {
+                this.alert(`Navigating home - ${reason}`, 'warning');
+
+                this.logger.warn(`Navigating home - ${reason}`);
+            }
+
+            this.localCache.set('returningHome', state === 'inProgress');
+
+            this.sendPacketToEveryone({
+                action: 'rth',
+                data: {
+                    returningHome: state === 'inProgress',
+                },
+            });
+        });
+
         this.disco.on('VideoStreamModeChanged', ({ mode }) => {
             this.localCache.set('streamMode', mode);
 
