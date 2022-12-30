@@ -300,6 +300,10 @@ disco.on('disconnected', async () => {
                 client.peer.addStream(stream);
                 client.stream = stream;
             }
+
+            logger.info(`Cancelling return to home..`);
+
+            disco.Piloting.stopReturnToHome();
         } else {
             logger.info(`Disco not discovered`);
 
