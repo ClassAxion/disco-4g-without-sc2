@@ -16,11 +16,13 @@ import APIServer from './modules/APIServer.module';
 
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
 
+const streamVideoPort = Number(process.env.STREAM_VIDEO_PORT || '55004');
+
 const disco: ParrotDisco = new ParrotDisco({
     debug: !!process.env.DEBUG,
     ip: process.env.DISCO_IP || '192.168.42.1',
     streamControlPort: Number(process.env.STREAM_CONTROL_PORT || '55005'),
-    streamVideoPort: Number(process.env.STREAM_VIDEO_PORT || '55004'),
+    streamVideoPort,
     d2cPort: Number(process.env.D2C_PORT || '9988'),
 });
 
@@ -104,7 +106,7 @@ const canTakeOff = () => {
     return true;
 };
 
-const flightStream: FlightStream = new FlightStream(logger, Resolutions[streamQuality]);
+const flightStream: FlightStream = new FlightStream(logger, Resolutions[streamQuality], streamVideoPort);
 
 /*
 (async () => {

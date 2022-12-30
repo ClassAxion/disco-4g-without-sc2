@@ -1,6 +1,7 @@
 import wrtc from 'wrtc';
 import ffmpeg from 'fluent-ffmpeg';
 import { Logger } from 'winston';
+import { writeFile } from 'fs/promises';
 
 import paths, { Paths } from '../utils/paths';
 
@@ -15,18 +16,27 @@ export const Resolutions: { [key: string]: Resolution } = {
 };
 
 export default class FlightStream {
-    private resolution: Resolution;
     private process: any;
     private output: any;
-    private logger: Logger;
     private running: boolean;
 
-    constructor(logger: Logger, resulotion: Resolution = { width: 856, height: 480 }) {
-        this.logger = logger;
-        this.resolution = resulotion;
+    constructor(
+        private readonly logger: Logger,
+        private readonly resolution: Resolution = { width: 856, height: 480 },
+        private readonly port: number = 55004,
+    ) {}
+
+    private async createSDP() {
+        await writeFile(
+            paths[Paths.SDP],
+            `c=IN IP4 192.168.42.1\nm=video ${this.port} RTP/AVP 96\na=rtpmap:96 H264/90000\n`,
+            'utf-8',
+        );
     }
 
     public async start(): Promise<void> {
+        await this.createSDP();
+
         this.output = await require('wrtc-to-ffmpeg')(wrtc).output({
             kind: 'video',
             width: this.resolution.width,
