@@ -68,9 +68,13 @@ export default class FlightEvents {
                 this.alert(`Navigating home is available`);
                 this.logger.warn(`Navigating home is available`);
             } else if (state === 'unavailable') {
-                this.alert(`Navigating home is unavailable`, 'warning');
+                this.alert(`Navigating home is unavailable`, 'danger');
 
                 this.logger.warn(`Navigating home is unavailable`);
+            } else if (state === 'inProgress') {
+                this.alert(`Navigating home - ${reason}`, 'warning');
+
+                this.logger.warn(`Navigating home - ${reason}`);
             }
         });
 
