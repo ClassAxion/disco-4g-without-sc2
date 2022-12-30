@@ -250,7 +250,7 @@ export default class FlightEvents {
             this.sendPacketToEveryone({
                 action: 'rth',
                 data: {
-                    returningHome: state === 'inProgress',
+                    inProgress: state === 'inProgress',
                 },
             });
         });

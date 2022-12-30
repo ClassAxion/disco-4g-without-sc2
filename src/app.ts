@@ -776,7 +776,7 @@ io.on('connection', async (socket) => {
             {
                 action: 'rth',
                 data: {
-                    returningHome: localCache.get('returningHome'),
+                    inProgress: localCache.get('returningHome'),
                 },
             },
         ];
