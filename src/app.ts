@@ -572,8 +572,11 @@ io.on('connection', async (socket) => {
                     logger.info(`Started test ${type}`);
 
                     if (type == 1) {
+                        disco.MediaRecord.startRecording();
                     } else if (type == 2) {
+                        disco.MediaRecord.stopRecording();
                     } else if (type == 3) {
+                        disco.MediaRecord.takePicture();
                     } else if (type == 4) {
                     } else if (type == 5) {
                     }

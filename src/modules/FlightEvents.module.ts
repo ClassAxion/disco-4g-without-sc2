@@ -71,6 +71,30 @@ export default class FlightEvents {
 
         /* TESTING */
 
+        this.disco.on('PictureStateChanged', (data) => {
+            this.alert(`PictureStateChanged got ${JSON.stringify(data)}`);
+
+            this.logger.info(`PictureStateChanged to ${JSON.stringify(data)}`);
+        });
+
+        this.disco.on('PictureStateChangedV2', (data) => {
+            this.alert(`PictureStateChangedV2 got ${JSON.stringify(data)}`);
+
+            this.logger.info(`PictureStateChangedV2 to ${JSON.stringify(data)}`);
+        });
+
+        this.disco.on('AltitudeAboveGroundChanged', (data) => {
+            this.alert(`AltitudeAboveGroundChanged got ${JSON.stringify(data)}`);
+
+            this.logger.info(`AltitudeAboveGroundChanged to ${JSON.stringify(data)}`);
+        });
+
+        this.disco.on('AltitudeAboveGroundChanged', (data) => {
+            this.alert(`AltitudeAboveGroundChanged got ${JSON.stringify(data)}`);
+
+            this.logger.info(`AltitudeAboveGroundChanged to ${JSON.stringify(data)}`);
+        });
+
         this.disco.on('VideoAutorecordChanged', (data) => {
             this.alert(`VideoAutorecordChanged got ${JSON.stringify(data)}`);
 
