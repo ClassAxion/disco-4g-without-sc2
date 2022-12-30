@@ -16,15 +16,30 @@ import APIServer from './modules/APIServer.module';
 
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
 
+const ip = process.env.DISCO_IP || '192.168.42.1';
+const streamControlPort = Number(process.env.STREAM_CONTROL_PORT || '55005');
 const streamVideoPort = Number(process.env.STREAM_VIDEO_PORT || '55004');
+const d2cPort = Number(process.env.D2C_PORT || '9988');
 
 const disco: ParrotDisco = new ParrotDisco({
     debug: !!process.env.DEBUG,
-    ip: process.env.DISCO_IP || '192.168.42.1',
-    streamControlPort: Number(process.env.STREAM_CONTROL_PORT || '55005'),
+    ip,
+    streamControlPort,
     streamVideoPort,
-    d2cPort: Number(process.env.D2C_PORT || '9988'),
+    d2cPort,
 });
+
+let homeLocation: { latitude: number; longitude: number; altitude: number } | null = null;
+
+if (!!process.env.HOME_LOCATION) {
+    const parts = process.env.HOME_LOCATION.split(',').map((e) => Number(e));
+
+    homeLocation = {
+        latitude: parts[0],
+        longitude: parts[1],
+        altitude: parts[2],
+    };
+}
 
 const streamQuality: string = ['480p', '720p'].includes(process.env.STREAM_QUALITY)
     ? process.env.STREAM_QUALITY
@@ -138,9 +153,31 @@ if (!startWithoutDisco) {
 
         logger.info(`Parrot Disco connected!`);
 
+        logger.info(`Setting stream quality to ${streamQuality}`);
+
+        if (streamQuality === '480p') {
+            disco.PictureSettings.setVideoResolutions('rec1080_stream480');
+        } else if (streamQuality === '720p') {
+            disco.PictureSettings.setVideoResolutions('rec720_stream720');
+        }
+
         logger.info(`Enabling video stream..`);
 
         disco.MediaStreaming.enableVideoStream();
+
+        if (!!homeLocation) {
+            logger.info(`Setting home location to N${homeLocation.latitude} E${homeLocation.longitude}`);
+
+            disco.GPSSettings.sendControllerGPS(
+                homeLocation.latitude,
+                homeLocation.longitude,
+                homeLocation.altitude,
+                3,
+                3,
+            );
+
+            disco.GPSSettings.setHomeType(1);
+        }
 
         await flightStream.start();
     })();

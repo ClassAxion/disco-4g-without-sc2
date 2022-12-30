@@ -70,7 +70,6 @@ I just want to have fun with Parrot Disco and I need something new :)
 -   Automatic circular landing cancelling on connection recovery
 -   Add flightplan icon on top navbar with flightplan modal on click
 -   Create flightplan controller for creating flightplans and running it
--   Automatic base parameters setup on first connect
 -   Automatic checking for "landing" flightplan during first connect
 -   Add settings icon on top navbar, show modal with global settings on click
 
