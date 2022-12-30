@@ -242,6 +242,17 @@ export default class FlightEvents {
     }
 
     public createTelemetry() {
+        this.disco.on('VideoStreamModeChanged', ({ mode }) => {
+            this.localCache.set('streamMode', mode);
+
+            this.sendPacketToEveryone({
+                action: 'camera',
+                data: {
+                    streamMode: mode,
+                },
+            });
+        });
+
         this.disco.on('PictureFormatChanged', ({ type }) => {
             this.localCache.set('pictureFormat', type);
 
