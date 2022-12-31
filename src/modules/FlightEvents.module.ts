@@ -247,6 +247,14 @@ export default class FlightEvents {
             this.localCache.set('isRecording', isRecording);
 
             this.sendPacketToEveryone({
+                action: 'alert',
+                data: {
+                    message: isRecording ? 'Recording started' : 'Recording stopped',
+                    level: 'info',
+                },
+            });
+
+            this.sendPacketToEveryone({
                 action: 'camera',
                 data: {
                     isRecording,
@@ -254,8 +262,8 @@ export default class FlightEvents {
             });
         });
 
-        this.disco.on('PictureStateChangedV2', ({state}) => {
-            const canTakePicture = state === 'ready'
+        this.disco.on('PictureStateChangedV2', ({ state }) => {
+            const canTakePicture = state === 'ready';
 
             this.localCache.set('canTakePicture', canTakePicture);
 

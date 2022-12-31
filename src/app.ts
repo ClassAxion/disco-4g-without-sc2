@@ -425,6 +425,18 @@ io.on('connection', async (socket) => {
                     disco.Camera.moveTo(localCache.get('defaultCameraTilt'), localCache.get('defaultCameraPan'));
                 } else if (packet.action && packet.action === 'take-picture') {
                     disco.MediaRecord.takePicture();
+
+                    try {
+                        peer.send(
+                            JSON.stringify({
+                                action: 'alert',
+                                data: {
+                                    level: 'info',
+                                    message: 'Picture taken',
+                                },
+                            }),
+                        );
+                    } catch {}
                 } else if (packet.action && packet.action === 'record') {
                     if (packet.data === true) {
                         disco.MediaRecord.startRecording();
