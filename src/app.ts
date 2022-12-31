@@ -96,6 +96,8 @@ const localCache: FlightCache = new FlightCache({
     videoResolutions: 'unknown',
     streamMode: 'unknown',
     returningHome: false,
+    isRecording: false,
+    canTakePicture: true,
 });
 
 const canTakeOff = () => {
@@ -421,6 +423,14 @@ io.on('connection', async (socket) => {
             if (permissions.canMoveCamera) {
                 if (packet.action && packet.action === 'camera-center') {
                     disco.Camera.moveTo(localCache.get('defaultCameraTilt'), localCache.get('defaultCameraPan'));
+                } else if (packet.action && packet.action === 'take-picture') {
+                    disco.MediaRecord.takePicture();
+                } else if (packet.action && packet.action === 'record') {
+                    if (packet.data === true) {
+                        disco.MediaRecord.startRecording();
+                    } else {
+                        disco.MediaRecord.stopRecording();
+                    }
                 } else if (packet.action && packet.action === 'camera') {
                     const { type } = packet.data;
 
@@ -730,6 +740,8 @@ io.on('connection', async (socket) => {
                     videoFramerate: localCache.get('videoFramerate'),
                     videoResolutions: localCache.get('videoResolutions'),
                     streamMode: localCache.get('streamMode'),
+                    isRecording: localCache.get('isRecording'),
+                    canTakePicture: localCache.get('canTakePicture'),
                 },
             },
             {

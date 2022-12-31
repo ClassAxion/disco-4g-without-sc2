@@ -27,14 +27,6 @@ export default class FlightEvents {
     }
 
     public createAlerts() {
-        this.disco.on('VideoStateChangedV2', ({ state }) => {
-            if (state === 'started') {
-                this.alert('Recording has been started (V2)', 'info');
-            } else if (state === 'stopped') {
-                this.alert('Recording has been stopped (V2)', 'info');
-            }
-        });
-
         this.disco.on('VideoStateChanged', ({ state }) => {
             if (state === 'started') {
                 this.alert('Recording has been started', 'info');
@@ -75,12 +67,6 @@ export default class FlightEvents {
             this.alert(`PictureStateChanged got ${JSON.stringify(data)}`);
 
             this.logger.info(`PictureStateChanged to ${JSON.stringify(data)}`);
-        });
-
-        this.disco.on('PictureStateChangedV2', (data) => {
-            this.alert(`PictureStateChangedV2 got ${JSON.stringify(data)}`);
-
-            this.logger.info(`PictureStateChangedV2 to ${JSON.stringify(data)}`);
         });
 
         this.disco.on('AltitudeAboveGroundChanged', (data) => {
@@ -255,6 +241,32 @@ export default class FlightEvents {
     }
 
     public createTelemetry() {
+        this.disco.on('VideoStateChangedV2', ({ state }) => {
+            const isRecording = state === 'started';
+
+            this.localCache.set('isRecording', isRecording);
+
+            this.sendPacketToEveryone({
+                action: 'camera',
+                data: {
+                    isRecording,
+                },
+            });
+        });
+
+        this.disco.on('PictureStateChangedV2', ({state}) => {
+            const canTakePicture = state === 'ready'
+
+            this.localCache.set('canTakePicture', canTakePicture);
+
+            this.sendPacketToEveryone({
+                action: 'camera',
+                data: {
+                    canTakePicture,
+                },
+            });
+        });
+
         this.disco.on('NavigateHomeStateChanged', ({ state, reason }) => {
             if (state === 'available') {
                 this.alert(`Navigating home is available`);
