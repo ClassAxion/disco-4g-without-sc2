@@ -2,6 +2,7 @@ import ParrotDisco from 'parrot-disco-api';
 import { Logger } from 'winston';
 import FlightCache from './FlightCache.module';
 import ParrotDiscoMap from './ParrotDiscoMap.module';
+import RemoteControl from './RemoteControl.module';
 
 export default class FlightEvents {
     private lastSpeedPacket: number = 0;
@@ -14,6 +15,7 @@ export default class FlightEvents {
         private readonly localCache: FlightCache,
         private readonly logger: Logger,
         private readonly map: ParrotDiscoMap,
+        private readonly remoteControl: RemoteControl,
     ) {}
 
     public alert(message: string, level: string = 'info') {
@@ -619,6 +621,8 @@ export default class FlightEvents {
 
                 this.lastSpeedPacket = Date.now();
             }
+
+            this.remoteControl.sendSpeed(speed);
         });
 
         this.disco.on('AltitudeChanged', ({ altitude }) => {
@@ -634,14 +638,16 @@ export default class FlightEvents {
 
                 this.lastAltitudePacket = Date.now();
             }
+
+            this.remoteControl.sendAltitude(altitude);
         });
 
         this.disco.on('AttitudeChanged', ({ pitch, roll, yaw }) => {
-            if (!this.lastAttitudePacket || Date.now() - this.lastAttitudePacket > 1000) {
-                const yawDegress = yaw * (180 / Math.PI);
-                const pitchDegress = pitch * (180 / Math.PI);
-                const rollDegress = roll * (180 / Math.PI);
+            const yawDegress = yaw * (180 / Math.PI);
+            const pitchDegress = pitch * (180 / Math.PI);
+            const rollDegress = roll * (180 / Math.PI);
 
+            if (!this.lastAttitudePacket || Date.now() - this.lastAttitudePacket > 1000) {
                 this.sendPacketToEveryone({
                     action: 'attitude',
                     data: {
@@ -655,13 +661,15 @@ export default class FlightEvents {
 
                 this.lastAttitudePacket = Date.now();
             }
+
+            this.remoteControl.sendHeading(yawDegress);
         });
 
         let lastPositionPacket = 0;
 
         this.disco.on('PositionChanged', ({ latitude: lat, longitude: lon }) => {
-            if (!lastPositionPacket || Date.now() - lastPositionPacket > 1000) {
-                if (lat !== 0 && lon !== 0) {
+            if (lat !== 0 && lon !== 0) {
+                if (!lastPositionPacket || Date.now() - lastPositionPacket > 1000) {
                     this.sendPacketToEveryone({
                         action: 'gps',
                         data: {
@@ -676,6 +684,8 @@ export default class FlightEvents {
 
                     lastPositionPacket = Date.now();
                 }
+
+                this.remoteControl.sendLocation(lat, lon);
             }
         });
 

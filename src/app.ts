@@ -13,6 +13,7 @@ import FlightStream, { Resolutions } from './modules/FlightStream.module';
 import Users from './modules/Users.module';
 import FlightEvents from './modules/FlightEvents.module';
 import APIServer from './modules/APIServer.module';
+import RemoteControl from './modules/RemoteControl.module';
 
 const startWithoutDisco: boolean = !!process.env.NO_DISCO;
 
@@ -20,6 +21,7 @@ const ip = process.env.DISCO_IP || '192.168.42.1';
 const streamControlPort = Number(process.env.STREAM_CONTROL_PORT || '55005');
 const streamVideoPort = Number(process.env.STREAM_VIDEO_PORT || '55004');
 const d2cPort = Number(process.env.D2C_PORT || '9988');
+const remoteControlPort = Number(process.env.REMOTE_CONTROL_PORT || '9999');
 
 const disco: ParrotDisco = new ParrotDisco({
     debug: !!process.env.DEBUG,
@@ -48,6 +50,8 @@ const streamQuality: string = ['480p', '720p'].includes(process.env.STREAM_QUALI
 const discoId: string = process.env.DISCO_ID || Math.random().toString(36).slice(2);
 
 const globalMap = new ParrotDiscoMap(process.env.MAP, logger, discoId, !!process.env.MAP);
+
+const remoteControl = new RemoteControl(remoteControlPort);
 
 let isConnected: boolean = false;
 
@@ -98,6 +102,7 @@ const localCache: FlightCache = new FlightCache({
     returningHome: false,
     isRecording: false,
     canTakePicture: true,
+    allowRemoteControl: false,
 });
 
 const canTakeOff = () => {
@@ -215,7 +220,7 @@ const sendPacketToEveryone = (packet, onlyAuthorized = false) => {
     }
 };
 
-const flightEvents = new FlightEvents(disco, sendPacketToEveryone, localCache, logger, globalMap);
+const flightEvents = new FlightEvents(disco, sendPacketToEveryone, localCache, logger, globalMap, remoteControl);
 
 flightEvents.createAlerts();
 flightEvents.createChecks();
@@ -325,6 +330,54 @@ disco.on('disconnected', async () => {
     //process.exit(1);
 });
 
+function move(pitch: number | undefined, roll: number | undefined, throttle: number | undefined) {
+    let isMoving = 0;
+
+    if (pitch !== undefined) {
+        if (pitch !== 0) {
+            disco.pilotingData.pitch = Validation.axis(pitch);
+
+            isMoving = 1;
+        } else {
+            disco.pilotingData.pitch = 0;
+        }
+    }
+
+    if (roll !== undefined) {
+        if (roll !== 0) {
+            disco.pilotingData.roll = Validation.axis(roll);
+
+            isMoving = 1;
+        } else {
+            disco.pilotingData.roll = 0;
+        }
+    }
+
+    if (throttle !== undefined) {
+        if (throttle !== 0) {
+            disco.pilotingData.gaz = Validation.axis(throttle);
+
+            isMoving = 1;
+        } else {
+            disco.pilotingData.gaz = 0;
+        }
+    }
+
+    if (isMoving === 0) {
+        disco.pilotingData.pitch = 0;
+        disco.pilotingData.roll = 0;
+        disco.pilotingData.gaz = 0;
+    }
+
+    disco.pilotingData.flag = isMoving;
+}
+
+remoteControl.on('move', ({ pitch, roll, throttle }) => {
+    if (localCache.get('allowRemoteControl') == true) {
+        move(pitch, roll, throttle);
+    }
+});
+
 io.on('connection', async (socket) => {
     const address = socket.handshake.address;
 
@@ -376,47 +429,11 @@ io.on('connection', async (socket) => {
                         logger.error(`Invalid circle direction: ${packet.data}`);
                     }
                 } else if (packet.action && packet.action === 'move') {
-                    const { pitch, roll, throttle } = packet.data;
+                    if (localCache.get('allowRemoteControl') == false) {
+                        const { pitch, roll, throttle } = packet.data;
 
-                    let isMoving = 0;
-
-                    if (pitch !== undefined) {
-                        if (pitch !== 0) {
-                            disco.pilotingData.pitch = Validation.axis(pitch);
-
-                            isMoving = 1;
-                        } else {
-                            disco.pilotingData.pitch = 0;
-                        }
+                        move(pitch, roll, throttle);
                     }
-
-                    if (roll !== undefined) {
-                        if (roll !== 0) {
-                            disco.pilotingData.roll = Validation.axis(roll);
-
-                            isMoving = 1;
-                        } else {
-                            disco.pilotingData.roll = 0;
-                        }
-                    }
-
-                    if (throttle !== undefined) {
-                        if (throttle !== 0) {
-                            disco.pilotingData.gaz = Validation.axis(throttle);
-
-                            isMoving = 1;
-                        } else {
-                            disco.pilotingData.gaz = 0;
-                        }
-                    }
-
-                    if (isMoving === 0) {
-                        disco.pilotingData.pitch = 0;
-                        disco.pilotingData.roll = 0;
-                        disco.pilotingData.gaz = 0;
-                    }
-
-                    disco.pilotingData.flag = isMoving;
                 }
             }
 
