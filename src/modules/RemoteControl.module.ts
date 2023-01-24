@@ -17,7 +17,15 @@ export default class RemoteControl extends EventEmitter {
     private onConnection(socket: Socket) {
         this.sockets[socket.id] = socket;
 
-        socket.on('disconnect', () => delete this.sockets[socket.id]);
+        socket.on('disconnect', () => {
+            delete this.sockets[socket.id];
+
+            this.emit('move', {
+                pitch: 0,
+                roll: 0,
+                throttle: 0,
+            });
+        });
 
         socket.on('move', ({ pitch, roll, throttle }) => this.emit('move', { pitch, roll, throttle }));
     }
