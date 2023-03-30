@@ -11,8 +11,8 @@ const logger = createLogger({
     format: loggerFormat,
     defaultMeta: { service: 'app' },
     transports: [
-        new transports.File({ filename: './error.log', level: 'error' }),
-        new transports.File({ filename: './app.log', level: 'debug' }),
+        new transports.File({ filename: './logs/error.log', level: 'error' }),
+        new transports.File({ filename: './logs/app.log', level: 'debug' }),
         new transports.Console({ format: loggerFormat }),
     ],
 });

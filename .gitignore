@@ -3,4 +3,5 @@ build
 tmp
 *.sock
 *.log
-logs
+logs/*
+!logs/.gitkeep
