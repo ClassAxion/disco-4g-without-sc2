@@ -563,6 +563,10 @@ io.on('connection', async (socket) => {
                     } else {
                         logger.info(`Can't take off`);
                     }
+                } else if (packet.action && packet.action === 'land') {
+                    logger.info(`Got land command`);
+
+                    disco.Piloting.land();
                 } else if (packet.action && packet.action === 'flightPlanStart') {
                     logger.info(`Got flight plan start command`);
 
