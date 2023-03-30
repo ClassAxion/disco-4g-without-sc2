@@ -642,6 +642,14 @@ export default class FlightEvents {
             this.remoteControl.sendAltitude(altitude);
         });
 
+        this.disco.on('LandingStateChanged', ({ state }) => {
+            if (state === 'linear') {
+                this.alert(`Linear landing started`, 'warning');
+            } else if (state === 'spiral') {
+                this.alert(`Spiral landing started`, 'warning');
+            }
+        });
+
         this.disco.on('AttitudeChanged', ({ pitch, roll, yaw }) => {
             const yawDegress = yaw * (180 / Math.PI);
             const pitchDegress = pitch * (180 / Math.PI);
