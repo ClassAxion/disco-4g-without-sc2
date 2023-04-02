@@ -74,7 +74,7 @@ const localCache: FlightCache = new FlightCache({
     gpsState: false,
     magnetometerState: false,
     verticalCameraState: false,
-    motorState: false,
+    motorState: true,
     flightPlanAvailability: false,
     homeTypeChosen: 'UNKNOWN',
     homeTypeWanted: 'TAKEOFF',
@@ -117,6 +117,7 @@ const canTakeOff = () => {
         'barometerState',
         'ultrasonicState',
         'gpsState',
+        'motorState',
         'magnetometerState',
         'verticalCameraState',
         'flightPlanAvailability',
@@ -560,6 +561,8 @@ io.on('connection', async (socket) => {
                         disco.Piloting.userTakeOff();
 
                         logger.info(`User taking off`);
+
+                        localCache.set('takeOffAt', Date.now());
                     } else {
                         logger.info(`Can't take off`);
                     }
@@ -786,6 +789,7 @@ io.on('connection', async (socket) => {
                     barometerState: localCache.get('barometerState'),
                     ultrasonicState: localCache.get('ultrasonicState'),
                     gpsState: localCache.get('gpsState'),
+                    motorState: localCache.get('motorState'),
                     magnetometerState: localCache.get('magnetometerState'),
                     verticalCameraState: localCache.get('verticalCameraState'),
                     flightPlanAvailability: localCache.get('flightPlanAvailability'),
