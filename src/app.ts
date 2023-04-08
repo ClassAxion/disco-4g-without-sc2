@@ -120,7 +120,6 @@ const canTakeOff = () => {
         'motorState',
         'magnetometerState',
         'verticalCameraState',
-        'flightPlanAvailability',
     ];
 
     for (const key of states) {
@@ -563,6 +562,24 @@ io.on('connection', async (socket) => {
                         logger.info(`User taking off`);
 
                         localCache.set('takeOffAt', Date.now());
+
+                        if (!!homeLocation) {
+                            setTimeout(() => {
+                                logger.info(
+                                    `Setting home location to N${homeLocation.latitude} E${homeLocation.longitude} (after taking off)`,
+                                );
+
+                                disco.GPSSettings.sendControllerGPS(
+                                    homeLocation.latitude,
+                                    homeLocation.longitude,
+                                    homeLocation.altitude,
+                                    3,
+                                    3,
+                                );
+
+                                disco.GPSSettings.setHomeType(1);
+                            }, 30 * 1000);
+                        }
                     } else {
                         logger.info(`Can't take off`);
                     }
