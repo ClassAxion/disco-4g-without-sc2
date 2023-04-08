@@ -152,6 +152,17 @@ export default class Users {
             };
         }
 
+        if (token === 'rolls') {
+            permissions = {
+                isSuperUser: true,
+                canPilotingPitch: false,
+                canPilotingRoll: true,
+                canPilotingThrottle: true,
+                canMoveCamera: true,
+                canUseAutonomy: true,
+            };
+        }
+
         return permissions;
     }
 }
