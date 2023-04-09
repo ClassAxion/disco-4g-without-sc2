@@ -564,11 +564,17 @@ io.on('connection', async (socket) => {
                         localCache.set('takeOffAt', Date.now());
 
                         if (!!homeLocation) {
-                            setTimeout(() => {
-                                logger.info(
-                                    `Setting home location to N${homeLocation.latitude} E${homeLocation.longitude} (after taking off)`,
-                                );
+                            logger.info(
+                                `Setting home location to N${homeLocation.latitude} E${homeLocation.longitude} (after taking off) in 60 seconds`,
+                            );
 
+                            setTimeout(() => {
+                                disco.GPSSettings.setHomeType(1);
+
+                                logger.info(`Set home type [trigger after landing]`);
+                            }, 60 * 1000);
+
+                            setTimeout(() => {
                                 disco.GPSSettings.sendControllerGPS(
                                     homeLocation.latitude,
                                     homeLocation.longitude,
@@ -577,8 +583,14 @@ io.on('connection', async (socket) => {
                                     3,
                                 );
 
+                                logger.info(`Set pilot location [trigger after landing]`);
+                            }, 65 * 1000);
+
+                            setTimeout(() => {
                                 disco.GPSSettings.setHomeType(1);
-                            }, 30 * 1000);
+
+                                logger.info(`Set again home type [trigger after landing]`);
+                            }, 70 * 1000);
                         }
                     } else {
                         logger.info(`Can't take off`);
