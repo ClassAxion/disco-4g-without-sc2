@@ -506,6 +506,19 @@ export default class FlightEvents {
             this.logger.info(`Set circling altitude to ${current}m`);
         });
 
+        this.disco.on('ReturnHomeMinAltitudeChanged', ({ current, min, max }) => {
+            this.localCache.set('rthAltitude', { current, min, max });
+
+            this.sendPacketToEveryone({
+                action: 'geofence',
+                data: {
+                    rthAltitude: { current, min, max },
+                },
+            });
+
+            this.logger.info(`Set RTH altitude to ${current}m`);
+        });
+
         this.disco.on('MassStorageInfoStateListChanged', ({ size, used_size }) => {
             this.localCache.set('massStorageSize', size);
             this.localCache.set('massStorageUsedSize', used_size);

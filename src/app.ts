@@ -88,6 +88,7 @@ const localCache: FlightCache = new FlightCache({
     minAltitude: null,
     maxDistance: null,
     circlingAltitude: null,
+    rthAltitude: null,
     geofenceEnabled: false,
     pictureFormat: 'unknown',
     autoWhiteBalance: 'unknown',
@@ -676,13 +677,15 @@ io.on('connection', async (socket) => {
                         disco.GPSSettings.sendControllerGPS(latitude, longitude, altitude, 3, 3);
                     }
                 } else if (packet.action && packet.action === 'geofence') {
-                    const { maxAltitude, minAltitude, maxDistance, circlingAltitude, isEnabled } = packet.data;
+                    const { maxAltitude, minAltitude, maxDistance, circlingAltitude, isEnabled, rthAltitude } =
+                        packet.data;
 
                     if (maxAltitude !== undefined) disco.PilotingSettings.setMaxAltitude(maxAltitude);
                     if (minAltitude !== undefined) disco.PilotingSettings.setMinAltitude(minAltitude);
                     if (maxDistance !== undefined) disco.PilotingSettings.setMaxDistance(maxDistance);
                     if (circlingAltitude !== undefined) disco.PilotingSettings.setCirclingAltitude(circlingAltitude);
                     if (isEnabled !== undefined) disco.PilotingSettings.setGeofence(isEnabled ? 1 : 0);
+                    if (rthAltitude !== undefined) disco.GPSSettings.setMinAltitude(rthAltitude);
                 }
             }
         }
@@ -852,6 +855,7 @@ io.on('connection', async (socket) => {
                     maxDistance: localCache.get('maxDistance'),
                     circlingAltitude: localCache.get('circlingAltitude'),
                     isEnabled: localCache.get('geofenceEnabled'),
+                    rthAltitude: localCache.get('rthAltitude'),
                 },
             },
             {
