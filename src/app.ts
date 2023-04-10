@@ -686,6 +686,25 @@ io.on('connection', async (socket) => {
                     if (circlingAltitude !== undefined) disco.PilotingSettings.setCirclingAltitude(circlingAltitude);
                     if (isEnabled !== undefined) disco.PilotingSettings.setGeofence(isEnabled ? 1 : 0);
                     if (rthAltitude !== undefined) disco.GPSSettings.setMinAltitude(rthAltitude);
+                } else if (packet.action && packet.action === 'autonomous') {
+                    const { isEnabled } = packet.data;
+
+                    if (isEnabled !== undefined) {
+                        localCache.set('allowRemoteControl', isEnabled);
+
+                        logger.info(
+                            isEnabled
+                                ? 'External autonomous controller enabled'
+                                : 'External autonomous controller disabled',
+                        );
+
+                        sendPacketToEveryone({
+                            action: 'autonomous',
+                            data: {
+                                isEnabled,
+                            },
+                        });
+                    }
                 }
             }
         }
@@ -856,6 +875,12 @@ io.on('connection', async (socket) => {
                     circlingAltitude: localCache.get('circlingAltitude'),
                     isEnabled: localCache.get('geofenceEnabled'),
                     rthAltitude: localCache.get('rthAltitude'),
+                },
+            },
+            {
+                action: 'autonomous',
+                data: {
+                    isEnabled: localCache.get('allowRemoteControl'),
                 },
             },
             {
