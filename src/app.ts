@@ -51,7 +51,7 @@ const discoId: string = process.env.DISCO_ID || Math.random().toString(36).slice
 
 const globalMap = new ParrotDiscoMap(process.env.MAP, logger, discoId, !!process.env.MAP);
 
-const remoteControl = new RemoteControl(remoteControlPort);
+const remoteControl = new RemoteControl(remoteControlPort, logger);
 
 let isConnected: boolean = false;
 
