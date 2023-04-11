@@ -1,4 +1,4 @@
-# Seazon closed. More changes comming in 2023 (mostly autonomous features).
+# Tutorial is available here - https://www.youtube.com/watch?v=TXAllkr67v0
 
 # WARNING! This project is experimental and you can damage your equipment!
 
@@ -53,25 +53,25 @@ I just want to have fun with Parrot Disco and I need something new :)
 
 # TODO IN 2023
 
--   Add icon on top navbar for camera settings, show modal with settings on click
+-   :heavy_check_mark: Add icon on top navbar for camera settings, show modal with settings on click
 -   Automatic camera exposure relative to sun function
 -   Show modal on click on gamepad icon
 -   Add permissions icon on top navbar, show modal on click
--   Add autonomous icon on top navbar, show modal on click
+-   :heavy_check_mark: Add autonomous icon on top navbar, show modal on click
 -   Create view for VR (with some parameters overlay if possible)
 -   Connect SkyAware to show other planes with low AGL on the map (on dashboard and global map)
 -   Add table on global map to show parrots parameters
--   Create disco auto following autonomous function
+-   :heavy_check_mark: Create disco auto following autonomous function
 -   Create camera automatic pointing to other disco
 -   Implement "Click on map and fly to this point" function
 -   Create "no fly" zones (cities, etc)
 -   Create blackbox to save all parameters during flight (csv file with timestamp)
 -   Create software to read blackbox files
--   Automatic circular landing cancelling on connection recovery
+-   :heavy_check_mark: Automatic circular landing cancelling on connection recovery
 -   Add flightplan icon on top navbar with flightplan modal on click
 -   Create flightplan controller for creating flightplans and running it
 -   Automatic checking for "landing" flightplan during first connect
--   Add settings icon on top navbar, show modal with global settings on click
+-   :heavy_check_mark: Add settings icon on top navbar, show modal with global settings on click
 
 # Useful links
 
